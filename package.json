@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack -p 3010",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:generate": "npx prisma generate",
+    "prisma:studio": "npx prisma studio"
   },
   "dependencies": {
     "@prisma/client": "5.21.1",

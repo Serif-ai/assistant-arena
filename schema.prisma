@@ -5,26 +5,49 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
-model Post {
-  id        String     @default(cuid()) @id
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User?   @relation(fields: [authorId], references: [id])
-  authorId  String?
+model User {
+  id        String   @id @default(cuid())
+  ip        String?  @unique
+  createdAt DateTime @default(now()) 
+  
+  @@index([ip])
 }
 
-model User {
-  id            String       @default(cuid()) @id
-  name          String?
-  email         String?   @unique
-  createdAt     DateTime  @default(now()) @map(name: "created_at")
-  updatedAt     DateTime  @updatedAt @map(name: "updated_at")
-  posts         Post[]
-  @@map(name: "users")
+model EmailThread {
+  id          String       @id @default(cuid())
+  messages    Message[] // The thread of messages
+  groundTruth String // The ground truth response
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  responses   AIResponse[] // AI-generated responses for this thread
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  from      String // Email address of sender
+  content   String // Content of the message
+  threadId  String // Foreign key to EmailThread
+  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  position  Int // Order in the thread
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([threadId])
+}
+
+model AIResponse {
+  id        String      @id @default(cuid())
+  content   String // The AI-generated response
+  threadId  String // Foreign key to EmailThread
+  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  model     String // Name/version of the AI model used
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([threadId])
 }
