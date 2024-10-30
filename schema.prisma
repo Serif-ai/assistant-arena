@@ -13,39 +13,27 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   ip        String?  @unique
-  createdAt DateTime @default(now()) 
-  
+  createdAt DateTime @default(now())
+
   @@index([ip])
 }
 
 model EmailThread {
   id          String       @id @default(cuid())
-  messages    Message[] // The thread of messages
-  groundTruth String // The ground truth response
+  messages    Json[]
+  groundTruth Json         @default("{}")
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  responses   AIResponse[] // AI-generated responses for this thread
-}
-
-model Message {
-  id        String      @id @default(cuid())
-  from      String // Email address of sender
-  content   String // Content of the message
-  threadId  String // Foreign key to EmailThread
-  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  position  Int // Order in the thread
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-
-  @@index([threadId])
+  responses   AIResponse[]
 }
 
 model AIResponse {
   id        String      @id @default(cuid())
-  content   String // The AI-generated response
-  threadId  String // Foreign key to EmailThread
+  content   String
+  threadId  String
   thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  model     String // Name/version of the AI model used
+  model     String
+  organization String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 

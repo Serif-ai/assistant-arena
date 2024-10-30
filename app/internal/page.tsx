@@ -1,3 +1,5 @@
+import InternalClient from "./components/internal-client";
+
 export default function Internal() {
-  return <div>Internal</div>;
+  return <InternalClient></InternalClient>;
 }
