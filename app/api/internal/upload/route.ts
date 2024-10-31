@@ -9,12 +9,14 @@ export async function POST(request: NextRequest) {
     const emailThreadsFile = formData.get("emailThreads") as File | null;
     const aiResponsesFile = formData.get("aiResponses") as File | null;
     const organization = formData.get("organization") as string | null;
-    const model = formData.get("model") as string | null;
+    const modelName = formData.get("model") as string | null;
 
-    console.log("organization", organization);
-    console.log("model", model);
-    console.log("emailThreadsFile", emailThreadsFile);
-    console.log("aiResponsesFile", aiResponsesFile);
+    if (!organization || !modelName) {
+      return NextResponse.json(
+        { error: "Organization and model name are required" },
+        { status: 400 }
+      );
+    }
 
     const emailThreads = JSON.parse(
       (await emailThreadsFile?.text()) || "[]"
@@ -23,9 +25,6 @@ export async function POST(request: NextRequest) {
       (await aiResponsesFile?.text()) || "[]"
     ) as UploadedAIResponse[];
 
-    console.log("emailThreads", emailThreads);
-    console.log("aiResponses", aiResponses);
-
     if (!Array.isArray(emailThreads) && !Array.isArray(aiResponses)) {
       return NextResponse.json(
         { error: "Invalid file format" },
@@ -33,9 +32,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create email threads
     let threadResults;
     if (emailThreads.length) {
-      console.log("before creating email threads");
       try {
         threadResults = await prisma.emailThread.createMany({
           data: emailThreads.map((thread) => ({
@@ -43,37 +42,52 @@ export async function POST(request: NextRequest) {
             groundTruth: thread.groundTruth as Prisma.InputJsonValue,
             messages: thread.thread as Prisma.InputJsonValue[],
           })),
+          skipDuplicates: true,
         });
+        console.log("threadResults", threadResults);
+        
       } catch (error) {
         console.error("Error creating email threads:", error);
+        throw error;
       }
     }
 
+    // Create AI responses linked to the model
     let responseResults;
-    if (aiResponses.length) {
-      console.log("before creating ai responses");
+    if (aiResponses.length && modelName && organization) {
       try {
+        const model = await prisma.model.upsert({
+          where: {
+            name_organization: {
+              name: modelName,
+              organization: organization,
+            },
+          },
+          create: {
+            name: modelName,
+            organization: organization,
+            eloRating: 1500, // Default starting ELO
+          },
+          update: {}, // No updates if it exists
+        });
+
         responseResults = await prisma.aIResponse.createMany({
           data: aiResponses.map((response) => ({
             content: response.response,
             threadId: response.exampleId,
-            organization: organization || "",
-            model: model || "",
+            modelId: model.id,
           })),
+          skipDuplicates: true,
         });
+
+        console.log("responseResults", responseResults);
       } catch (error) {
         console.error("Error creating AI responses:", error);
+        throw error;
       }
     }
 
-    console.log("threadResults", {
-      success: true,
-      threadCount: threadResults?.count || 0,
-      responseCount: responseResults?.count || 0,
-    });
-
     return NextResponse.json({
-      success: true,
       threadCount: threadResults?.count || 0,
       responseCount: responseResults?.count || 0,
     });

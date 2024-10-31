@@ -34,3 +34,32 @@ export type UploadedAIResponse = {
   response: string;
   exampleId: string;
 };
+
+export type VoteRequestBody = {
+  userId: string;
+  threadId: string;
+  winnerId: string;
+  loserId: string;
+  timeToVote: number;
+};
+
+interface Thread {
+  id: string;
+  messages: Array<{
+    from: string;
+    content: string;
+  }>;
+}
+
+interface Response {
+  id: string;
+  content: string;
+}
+
+export interface ThreadWithResponses {
+  thread: Thread;
+  responses: {
+    a: Response;
+    b: Response;
+  };
+}

@@ -4,46 +4,71 @@ import prisma from "@/lib/prisma";
 const K_FACTOR = 32;
 
 function calculateEloRating(winnerRating: number, loserRating: number): number {
-  const expectedScore = 1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
+  const expectedScore =
+    1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
   return Math.round(K_FACTOR * (1 - expectedScore));
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  const body = (await request.json()) as {
+    userId: string;
+    threadId: string;
+    winnerId: string;
+    loserId: string;
+    timeToVote: number;
+  };
+
   const { userId, threadId, winnerId, loserId, timeToVote } = body;
 
-  // Get current ELO ratings
-  const [winner, loser] = await Promise.all([
-    prisma.aIResponse.findUnique({ where: { id: winnerId } }),
-    prisma.aIResponse.findUnique({ where: { id: loserId } }),
+  // Get responses and their associated models
+  const [winnerResponse, loserResponse] = await Promise.all([
+    prisma.aIResponse.findUnique({
+      where: { id: winnerId },
+      include: { model: true }
+    }),
+    prisma.aIResponse.findUnique({
+      where: { id: loserId },
+      include: { model: true }
+    })
   ]);
 
-  if (!winner || !loser) {
-    return NextResponse.json({ error: "Invalid response IDs" }, { status: 400 });
+  if (!winnerResponse?.model || !loserResponse?.model) {
+    return NextResponse.json(
+      { error: "Invalid response or model IDs" },
+      { status: 400 }
+    );
   }
 
-  const ratingChange = calculateEloRating(winner.eloRating, loser.eloRating);
+  const ratingChange = calculateEloRating(
+    winnerResponse.model.eloRating,
+    loserResponse.model.eloRating
+  );
 
-  // Update ratings and create vote in transaction
+  // Update model ratings and create vote in transaction
   await prisma.$transaction([
-    prisma.aIResponse.update({
-      where: { id: winnerId },
-      data: { eloRating: winner.eloRating + ratingChange },
+    prisma.model.update({
+      where: { id: winnerResponse.model.id },
+      data: { eloRating: winnerResponse.model.eloRating + ratingChange }
     }),
-    prisma.aIResponse.update({
-      where: { id: loserId },
-      data: { eloRating: loser.eloRating - ratingChange },
+    prisma.model.update({
+      where: { id: loserResponse.model.id },
+      data: { eloRating: loserResponse.model.eloRating - ratingChange }
     }),
     prisma.vote.create({
       data: {
         userId,
         threadId,
-        winningResponse: winnerId,
-        losingResponse: loserId,
+        winnerModelId: winnerResponse.model.id,
+        loserModelId: loserResponse.model.id,
         timeToVote,
-      },
-    }),
+      }
+    })
   ]);
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ 
+    success: true,
+    ratingChange,
+    newWinnerRating: winnerResponse.model.eloRating + ratingChange,
+    newLoserRating: loserResponse.model.eloRating - ratingChange
+  });
 }

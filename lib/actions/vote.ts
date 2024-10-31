@@ -1,12 +1,10 @@
-export const vote = async (
-  userIp: string,
-  emailThreadId: string,
-  vote: "up" | "down"
-) => {
-  const resp = await fetch("/api/vote", {
-    method: "POST",
-    body: JSON.stringify({ userIp, emailThreadId, vote }),
-  });
+import { VoteRequestBody } from "@/types";
+import { callApi } from "../utils";
 
-  return resp.json();
+export const vote = async (voteInfo: VoteRequestBody) => {
+  return await callApi("/api/vote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(voteInfo),
+  });
 };
