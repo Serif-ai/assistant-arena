@@ -8,5 +8,5 @@ export function cn(...inputs: ClassValue[]) {
 export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const callApi = async (path: string, options?: RequestInit) => {
-  return fetch(`${baseUrl}/${path}`, options);
+  return fetch(`${baseUrl}${path}`, options);
 };
