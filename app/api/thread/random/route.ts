@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
-  const response = await fetch(`https://freeipapi.com/api/json/${ip}`);
+  const response = await fetch(`https://freeipapi.com/api/json`);
   const data = await response.json();
 
   const ua = userAgent(request);
