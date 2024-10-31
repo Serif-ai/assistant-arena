@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     headerIp: ip,
-    apiIp: data.ip,
+    apiIp: data,
     userId: user.id,
     thread: {
       id: thread.id,
