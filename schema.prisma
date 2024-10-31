@@ -14,6 +14,7 @@ model User {
   id        String   @id @default(cuid())
   ip        String?  @unique
   createdAt DateTime @default(now())
+  votes     Vote[]
 
   @@index([ip])
 }
@@ -25,17 +26,40 @@ model EmailThread {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   responses   AIResponse[]
+  votes       Vote[]
 }
 
 model AIResponse {
-  id        String      @id @default(cuid())
-  content   String
-  threadId  String
-  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  model     String
+  id           String      @id @default(cuid())
+  content      String
+  threadId     String
+  thread       EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  model        String
   organization String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  eloRating    Int         @default(1500)
+  votesWon     Vote[]      @relation("WinningResponse")
+  votesLost    Vote[]      @relation("LosingResponse")
 
   @@index([threadId])
+}
+
+model Vote {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  threadId        String
+  thread          EmailThread @relation(fields: [threadId], references: [id])
+  winningResponse String
+  winner          AIResponse  @relation("WinningResponse", fields: [winningResponse], references: [id])
+  losingResponse  String
+  loser           AIResponse  @relation("LosingResponse", fields: [losingResponse], references: [id])
+  timeToVote      Int         // in seconds
+  createdAt       DateTime    @default(now())
+
+  @@index([userId])
+  @@index([threadId])
+  @@index([winningResponse])
+  @@index([losingResponse])
 }

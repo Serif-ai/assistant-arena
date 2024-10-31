@@ -63,7 +63,6 @@ export default function InternalClient() {
       }
 
       console.log("formData", formData);
-      
 
       const response = await fetch("/api/internal/upload", {
         method: "POST",
@@ -97,7 +96,6 @@ export default function InternalClient() {
     setAiResponseFile(null);
     setSelectedOrg("");
     setNewOrgInput("");
-    toast.success("Cleared all files");
   };
 
   return (
@@ -143,52 +141,56 @@ export default function InternalClient() {
 
             {aiResponseFile && (
               <div className="space-y-4 p-6 border-t">
-                <Label>Organization</Label>
-                <RadioGroup
-                  defaultValue="select"
-                  value={orgInputType}
-                  onValueChange={(value) =>
-                    setOrgInputType(value as "select" | "input")
-                  }
-                  className="flex items-center space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="select" id="select" />
-                    <Label htmlFor="select">Select Existing</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="input" id="input" />
-                    <Label htmlFor="input">Add New</Label>
-                  </div>
-                </RadioGroup>
+                <div className="space-y-2">
+                  <Label>Organization</Label>
+                  <RadioGroup
+                    defaultValue="select"
+                    value={orgInputType}
+                    onValueChange={(value) =>
+                      setOrgInputType(value as "select" | "input")
+                    }
+                    className="flex items-center space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="select" id="select" />
+                      <Label htmlFor="select">Select Existing</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="input" id="input" />
+                      <Label htmlFor="input">Add New</Label>
+                    </div>
+                  </RadioGroup>
 
-                {orgInputType === "select" ? (
-                  <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-                    <SelectTrigger className="w-[280px]">
-                      <SelectValue placeholder="Select organization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="serif">Serif</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
+                  {orgInputType === "select" ? (
+                    <Select value={selectedOrg} onValueChange={setSelectedOrg}>
+                      <SelectTrigger className="w-[280px]">
+                        <SelectValue placeholder="Select organization" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="serif">Serif</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      type="text"
+                      placeholder="Enter organization name"
+                      value={newOrgInput}
+                      onChange={(e) => setNewOrgInput(e.target.value)}
+                      className="w-[280px]"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <Label>Model</Label>
                   <Input
                     type="text"
-                    placeholder="Enter organization name"
-                    value={newOrgInput}
-                    onChange={(e) => setNewOrgInput(e.target.value)}
+                    placeholder="Enter model name"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
                     className="w-[280px]"
                   />
-                )}
-
-                <Label>Model</Label>
-                <Input
-                  type="text"
-                  placeholder="Enter model name"
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="w-[280px]"
-                />
+                </div>
               </div>
             )}
           </div>
