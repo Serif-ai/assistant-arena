@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { EmailThread, Prisma } from "@prisma/client";
-import { AIResponse } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { UploadedAIResponse, UploadedEmailThread } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,18 +16,16 @@ export async function POST(request: NextRequest) {
     console.log("emailThreadsFile", emailThreadsFile);
     console.log("aiResponsesFile", aiResponsesFile);
 
-    // Read and parse the files
     const emailThreads = JSON.parse(
       (await emailThreadsFile?.text()) || "[]"
-    ) as EmailThread[];
+    ) as UploadedEmailThread[];
     const aiResponses = JSON.parse(
       (await aiResponsesFile?.text()) || "[]"
-    ) as AIResponse[];
+    ) as UploadedAIResponse[];
 
     console.log("emailThreads", emailThreads);
     console.log("aiResponses", aiResponses);
 
-    // Validate the data structure
     if (!Array.isArray(emailThreads) && !Array.isArray(aiResponses)) {
       return NextResponse.json(
         { error: "Invalid file format" },
@@ -37,25 +35,42 @@ export async function POST(request: NextRequest) {
 
     let threadResults;
     if (emailThreads.length) {
-      threadResults = await prisma.emailThread.createMany({
-        data: emailThreads.map((thread) => ({
-          id: thread.id,
-          groundTruth: thread.groundTruth as Prisma.InputJsonValue,
-        })),
-      });
+      console.log("before creating email threads");
+      try {
+        threadResults = await prisma.emailThread.createMany({
+          data: emailThreads.map((thread) => ({
+            id: thread.id,
+            groundTruth: thread.groundTruth as Prisma.InputJsonValue,
+            messages: thread.thread as Prisma.InputJsonValue[],
+          })),
+        });
+      } catch (error) {
+        console.error("Error creating email threads:", error);
+      }
     }
 
     let responseResults;
     if (aiResponses.length) {
-      responseResults = await prisma.aIResponse.createMany({
-        data: aiResponses.map((response) => ({
-          content: response.content,
-          threadId: response.threadId,
-          organization: organization || "",
-          model: model || "",
-        })),
-      });
+      console.log("before creating ai responses");
+      try {
+        responseResults = await prisma.aIResponse.createMany({
+          data: aiResponses.map((response) => ({
+            content: response.response,
+            threadId: response.exampleId,
+            organization: organization || "",
+            model: model || "",
+          })),
+        });
+      } catch (error) {
+        console.error("Error creating AI responses:", error);
+      }
     }
+
+    console.log("threadResults", {
+      success: true,
+      threadCount: threadResults?.count || 0,
+      responseCount: responseResults?.count || 0,
+    });
 
     return NextResponse.json({
       success: true,

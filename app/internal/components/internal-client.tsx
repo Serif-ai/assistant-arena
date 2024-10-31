@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-export default function Internal() {
+export default function InternalClient() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [emailThreadFile, setEmailThreadFile] = useState<File | null>(null);
   const [aiResponseFile, setAiResponseFile] = useState<File | null>(null);
@@ -25,11 +25,17 @@ export default function Internal() {
     "select"
   );
   const [newOrgInput, setNewOrgInput] = useState("");
+  const [model, setModel] = useState<string>("");
+
+  const organization = orgInputType === "select" ? selectedOrg : newOrgInput;
 
   useEffect(() => {
     console.log("welcome", toast);
     toast.info("Welcome to the internal tools!");
   }, []);
+
+  const submittable =
+    emailThreadFile || (aiResponseFile && organization && model);
 
   const handleProcessUploads = async () => {
     const organization = orgInputType === "select" ? selectedOrg : newOrgInput;
@@ -53,8 +59,11 @@ export default function Internal() {
       if (aiResponseFile) {
         formData.append("aiResponses", aiResponseFile);
         formData.append("organization", organization);
-        formData.append("isNewOrg", orgInputType === "input" ? "true" : "false");
+        formData.append("model", model);
       }
+
+      console.log("formData", formData);
+      
 
       const response = await fetch("/api/internal/upload", {
         method: "POST",
@@ -71,7 +80,7 @@ export default function Internal() {
       }${emailThreadFile && aiResponseFile ? " and " : ""}${
         aiResponseFile ? `${data.responseCount} AI responses` : ""
       }.`;
-      
+
       toast.success(successMessage);
 
       handleClear();
@@ -159,7 +168,7 @@ export default function Internal() {
                       <SelectValue placeholder="Select organization" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="org1">Serif</SelectItem>
+                      <SelectItem value="serif">Serif</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
@@ -171,17 +180,26 @@ export default function Internal() {
                     className="w-[280px]"
                   />
                 )}
+
+                <Label>Model</Label>
+                <Input
+                  type="text"
+                  placeholder="Enter model name"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="w-[280px]"
+                />
               </div>
             )}
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="flex gap-4">
+          <div className="flex gap-4 justify-center">
             <Button
               size="lg"
               onClick={handleProcessUploads}
-              disabled={isProcessing || (!emailThreadFile && !aiResponseFile)}
+              disabled={isProcessing || !submittable}
             >
               {isProcessing ? "Processing..." : "Process Uploads"}
             </Button>
