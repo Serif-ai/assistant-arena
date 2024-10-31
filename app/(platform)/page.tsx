@@ -10,6 +10,10 @@ export default async function Home() {
   const referer = headersList.get("referer");
   console.log("referer", referer);
 
+  if (!data) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto py-8">
       <Tabs defaultValue="vote" className="w-full">
