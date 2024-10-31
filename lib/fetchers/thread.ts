@@ -2,8 +2,13 @@ import { ThreadWithResponses } from "@/types";
 import { callApi } from "../utils";
 
 export const getThreads = async () => {
-  return (await callApi("/api/thread/random").then((res) => res.json())) as {
-    userId: string;
-    threads: ThreadWithResponses[];
-  };
+  const resp = await callApi("/api/thread/random");
+  if (resp.success) {
+    return resp.data as {
+      userId: string;
+      threads: ThreadWithResponses[];
+    };
+  } else {
+    return null;
+  }
 };
