@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp } from "lucide-react";
 import { vote } from "@/lib/actions/vote";
 import { ThreadWithResponses } from "@/types";
+import { toast } from "sonner";
 
 export default function VotePage({
   initialThreads,
@@ -19,6 +20,7 @@ export default function VotePage({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startTime] = useState(Date.now());
   const [voted, setVoted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(
     null
   );
@@ -26,6 +28,8 @@ export default function VotePage({
 
   const handleVote = async () => {
     if (!userId || !threads[currentIndex] || !selectedResponse) return;
+
+    setIsLoading(true);
 
     const current = threads[currentIndex];
     const timeToVote = Math.round((Date.now() - startTime) / 1000);
@@ -57,8 +61,12 @@ export default function VotePage({
       }
 
       setVoted(true);
+      toast.success("Vote submitted successfully");
     } catch (error) {
+      toast.error("Vote failed. Something went wrong");
       console.error("Error submitting vote:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -115,9 +123,21 @@ export default function VotePage({
 
       <div className="flex justify-center gap-4">
         {!voted ? (
-          <Button onClick={handleVote} disabled={!selectedResponse}>
-            <ThumbsUp className="mr-2" />
-            Submit Vote
+          <Button
+            onClick={handleVote}
+            disabled={!selectedResponse || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Submitting...
+              </>
+            ) : (
+              <>
+                <ThumbsUp className="mr-2" />
+                Submit Vote
+              </>
+            )}
           </Button>
         ) : (
           <Button onClick={handleNext} variant="outline">
