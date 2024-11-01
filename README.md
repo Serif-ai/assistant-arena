@@ -1,11 +1,38 @@
-AssistantArena is our take on an anonymous evaluation metric to test personalized assistants.
+# AssistantArena 🏆
 
-While tools like Chatbot Arena exist for testing foundational models and SWE Bench + plenty more benchmarks exist to evaluate coding agents, evaluating personalized assistants requires a lot more context.
+An open-source platform for evaluating personalized AI assistants through anonymous community benchmarking.
 
-Unlike foundational models that are “stateless” and have a unified "text in, text out" API, assistants are often personalized for each user and have different interfaces (for example generating emails via a Chrome Extension vs API). AssistantArena aims to address this by curating and sharing public datasets for different assistant capabilities, starting with email, and hosting an open source evaluation tool where the community can rank assistants.
+## Overview
 
-Every quarter, we'll release new datasets of sample inboxes and collaborate with developers of assistants to generate 50 test responses for each inbox. These responses will reply to emails sent to the inbox owner, with the owner's actual response hidden from the model and saved as "ground truth" for later comparison.
+While tools like Chatbot Arena excel at testing foundational models, and benchmarks like SWE Bench evaluate coding agents, there's a gap in evaluating personalized AI assistants. These assistants often:
+- Are customized for individual users
+- Have diverse interfaces (Chrome extensions, APIs, etc.)
+- Maintain user-specific context and state
 
-Once all submissions are collected, the responses will be compiled into a blind dataset. The community will then vote on which response is the best. To provide context during voting, voters will see the entire email thread (for threads with multiple emails) and the actual "ground truth" email sent by the inbox owner.
+AssistantArena addresses this challenge by providing curated public datasets and an open-source evaluation framework for ranking assistant capabilities.
 
-This first iteration will use three inboxes—one personal, one work, and one for customer support—along with four of the most popular email assistants (Gemini, Superhuman, Microsoft Copilot, and Serif).
+## How It Works
+
+### Quarterly Evaluation Cycle
+
+1. **Dataset Release**: We publish sample inboxes representing different use cases
+2. **Assistant Testing**: Developers generate 50 test responses per inbox
+3. **Blind Evaluation**: Community votes on anonymized responses
+4. **Context-Rich Voting**: Voters see full email threads and "ground truth" responses
+
+### Current Evaluation Scope
+
+**Test Inboxes:**
+- Personal Communications
+- Professional Workplace
+- Customer Support
+
+**Featured Assistants:**
+- Gemini
+- Superhuman
+- Microsoft Copilot
+- Serif
+
+## Why AssistantArena?
+
+Unlike traditional "text in, text out" model evaluations, AssistantArena recognizes that modern AI assistants are deeply integrated into user workflows and require contextual evaluation. Our platform enables fair, comprehensive assessment of real-world assistant performance.
