@@ -3,7 +3,7 @@
 import { Mail, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "./file-upload";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Select,
@@ -16,48 +16,136 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+enum UploadType {
+  EMAIL = "email",
+  AI = "ai",
+  GROUND_TRUTH = "groundTruth",
+}
+
+interface UploadTypeConfig {
+  title: string;
+  icon: JSX.Element;
+  description: string;
+  format: object;
+}
+
+const uploadTypeConfig: Record<UploadType, UploadTypeConfig> = {
+  [UploadType.EMAIL]: {
+    title: "Email Threads",
+    icon: <Mail className="h-6 w-6" />,
+    description:
+      "Upload datasets of email threads including ground truth for each thread.",
+    format: [
+      {
+        id: "thread_001",
+        userEmail: "john.doe@example.com",
+        emails: [
+          {
+            subject: "Subject of the email...",
+            from: "john.doe@example.com",
+            to: "manager@example.com",
+            cc: "team@example.com",
+            date: "2024-03-20T11:30:00Z",
+            text: "Content of the email....",
+          },
+        ],
+      },
+    ],
+  },
+  [UploadType.AI]: {
+    title: "AI Responses",
+    icon: <Bot className="h-6 w-6" />,
+    description:
+      "Upload datasets of AI-generated responses that correspond to email threads.",
+    format: [
+      {
+        threadId: "thread_001",
+        draft: {
+          subject: "Subject of the email...",
+          from: "john.doe@example.com",
+          to: "manager@example.com",
+          cc: "team@example.com",
+          date: "2024-03-20T11:30:00Z",
+          text: "Content of the email....",
+        },
+      },
+    ],
+  },
+  [UploadType.GROUND_TRUTH]: {
+    title: "Ground Truth",
+    icon: <Bot className="h-6 w-6" />,
+    description:
+      "Upload datasets of ground truth responses that correspond to email threads.",
+    format: [
+      {
+        threadId: "thread_001",
+        email: {
+          subject: "Subject of the email...",
+          from: "john.doe@example.com",
+          to: "manager@example.com",
+          cc: "team@example.com",
+          date: "2024-03-20T10:30:00Z",
+          text: "Content of the email....",
+        },
+      },
+    ],
+  },
+} as const;
+
 export default function InternalClient() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [emailThreadFile, setEmailThreadFile] = useState<File | null>(null);
-  const [aiResponseFile, setAiResponseFile] = useState<File | null>(null);
+
+  const [file, setFile] = useState<File | null>(null);
   const [selectedOrg, setSelectedOrg] = useState<string>("");
   const [orgInputType, setOrgInputType] = useState<"select" | "input">(
     "select"
   );
   const [newOrgInput, setNewOrgInput] = useState("");
   const [model, setModel] = useState<string>("");
+  const [uploadType, setUploadType] = useState<UploadType>(UploadType.EMAIL);
 
   const organization = orgInputType === "select" ? selectedOrg : newOrgInput;
 
-  useEffect(() => {
-    console.log("welcome", toast);
-    toast.info("Welcome to the internal tools!");
-  }, []);
+  const submittable = useMemo(() => {
+    if (uploadType === UploadType.AI) {
+      return !!file && !!organization && !!model;
+    }
 
-  const submittable =
-    emailThreadFile || (aiResponseFile && organization && model);
+    return !!file;
+  }, [file, organization, model, uploadType]);
 
   const handleProcessUploads = async () => {
     const organization = orgInputType === "select" ? selectedOrg : newOrgInput;
 
-    if (!emailThreadFile && !aiResponseFile) {
+    if (!file) {
       toast.error("Please upload at least one file.");
       return;
     }
 
-    if (aiResponseFile && !organization) {
-      toast.error("Please provide an organization for AI responses.");
-      return;
+    if (uploadType === UploadType.AI) {
+      if (!organization || !model) {
+        if (!organization) {
+          toast.error("Please provide an organization.");
+        } else if (!model) {
+          toast.error("Please provide a model.");
+        }
+        return;
+      }
     }
 
     setIsProcessing(true);
     try {
       const formData = new FormData();
-      if (emailThreadFile) {
-        formData.append("emailThreads", emailThreadFile);
+      if (uploadType === UploadType.EMAIL) {
+        formData.append("emailThreads", file);
       }
-      if (aiResponseFile) {
-        formData.append("aiResponses", aiResponseFile);
+
+      if (uploadType === UploadType.GROUND_TRUTH) {
+        formData.append("groundTruth", file);
+      }
+
+      if (uploadType === UploadType.AI) {
+        formData.append("aiResponses", file);
         formData.append("organization", organization);
         formData.append("model", model);
       }
@@ -74,11 +162,13 @@ export default function InternalClient() {
       }
 
       const data = await response.json();
-      const successMessage = `Processed ${
-        emailThreadFile ? `${data.threadCount} threads` : ""
-      }${emailThreadFile && aiResponseFile ? " and " : ""}${
-        aiResponseFile ? `${data.responseCount} AI responses` : ""
-      }.`;
+      const successMessage = `Processed ${[
+        data.threadCount ? `${data.threadCount} threads` : "",
+        data.responseCount ? `${data.responseCount} AI responses` : "",
+        data.groundTruthCount
+          ? `${data.groundTruthCount} ground truth responses`
+          : "",
+      ].join(" and ")}.`;
 
       toast.success(successMessage);
 
@@ -92,10 +182,10 @@ export default function InternalClient() {
   };
 
   const handleClear = () => {
-    setEmailThreadFile(null);
-    setAiResponseFile(null);
+    setFile(null);
     setSelectedOrg("");
     setNewOrgInput("");
+    setModel("");
   };
 
   return (
@@ -108,40 +198,34 @@ export default function InternalClient() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="rounded-lg border ">
-            <FileUpload
-              title="Email Threads"
-              icon={<Mail className="h-6 w-6" />}
-              description="Upload datasets of email threads including ground truth for each thread."
-              format={{
-                id: "thread_123",
-                thread: [
-                  { from: "user@example.com", content: "..." },
-                  { from: "other@example.com", content: "..." },
-                ],
-                groundTruth: { content: "..." },
-              }}
-              onFileSelect={setEmailThreadFile}
-              value={emailThreadFile}
-            />
+        <div className="space-y-8">
+          <div className="flex justify-center">
+            <RadioGroup
+              value={uploadType}
+              onValueChange={(value) => setUploadType(value as UploadType)}
+              className="flex items-center space-x-6"
+            >
+              {Object.entries(uploadTypeConfig).map(([type, config]) => (
+                <div key={type} className="flex items-center space-x-2">
+                  <RadioGroupItem value={type} id={type} />
+                  <Label htmlFor={type}>{config.title}</Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
 
-          <div className="rounded-lg border ">
+          <div className="rounded-lg border max-w-2xl mx-auto">
             <FileUpload
-              title="AI Responses"
-              icon={<Bot className="h-6 w-6" />}
-              description="Upload datasets of AI-generated responses that correspond to email threads."
-              format={{
-                id: "response_123",
-                exampleId: "thread_123",
-                response: "AI generated response content...",
-              }}
-              onFileSelect={setAiResponseFile}
-              value={aiResponseFile}
+              title={uploadTypeConfig[uploadType].title}
+              icon={uploadTypeConfig[uploadType].icon}
+              description={uploadTypeConfig[uploadType].description}
+              format={uploadTypeConfig[uploadType].format}
+              onFileSelect={setFile}
+              value={file}
             />
 
-            {aiResponseFile && (
+            {(uploadType === UploadType.AI ||
+              uploadType === UploadType.GROUND_TRUTH) && (
               <div className="space-y-4 p-6 border-t">
                 <div className="space-y-2">
                   <Label>Organization</Label>
@@ -183,16 +267,18 @@ export default function InternalClient() {
                   )}
                 </div>
 
-                <div>
-                  <Label>Model</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter model name"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    className="w-[280px]"
-                  />
-                </div>
+                {uploadType === UploadType.AI && (
+                  <div>
+                    <Label>Model</Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter model name"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      className="w-[280px]"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

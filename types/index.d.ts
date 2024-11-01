@@ -4,6 +4,8 @@ export type TypedGroundTruth = Omit<GroundTruth, "email"> & {
   email: TypedEmail;
 };
 
+export type GroundTruthCreateBody = Omit<TypedGroundTruth, "id", "createdAt">;
+
 export type VoteRequestBody = {
   userId: string;
   threadId: string;
