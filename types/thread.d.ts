@@ -1,8 +1,9 @@
-import { Thread } from "@prisma/client";
-import { TypedEmail } from ".";
+import { Thread, Model } from "@prisma/client";
+import { TypedEmail, ThreadWithResponses } from ".";
 
 export type TypedEmailThread = Omit<Thread, "emails"> & {
   emails: TypedEmail[];
+  model: Model;
 };
 
 export type EmailThreadCreateBody = Omit<

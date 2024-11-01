@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
     const aiResponses = JSON.parse(
       (await aiResponsesFile?.text()) || "[]"
     ) as UploadedAIResponse[];
-    const groundTruth = JSON.parse(
-      (await groundTruthFile?.text()) || "null"
-    ) as GroundTruthCreateBody | null;
+    const groundTruths = JSON.parse(
+      (await groundTruthFile?.text()) || "[]"
+    ) as GroundTruthCreateBody[];
 
     if (
       (emailThreads && !Array.isArray(emailThreads)) ||
@@ -95,12 +95,13 @@ export async function POST(request: NextRequest) {
     }
 
     let groundTruthResults;
-    if (groundTruth) {
-      groundTruthResults = await prisma.groundTruth.create({
-        data: {
+    if (groundTruths.length) {
+      groundTruthResults = await prisma.groundTruth.createMany({
+        data: groundTruths.map((groundTruth) => ({
           email: groundTruth.email as Prisma.InputJsonValue,
           threadId: groundTruth.threadId,
-        },
+        })),
+        skipDuplicates: true,
       });
     }
 

@@ -48,6 +48,9 @@ export async function GET(
     where: {
       threadId: { in: threads.map((t) => t.id) },
     },
+    include: {
+      model: true,
+    },
   });
 
   const responsesByThread = drafts.reduce((acc, draft) => {
@@ -79,10 +82,12 @@ export async function GET(
           a: {
             id: responseA.id,
             draft: responseA.draft as TypedEmail,
+            model: responseA.model,
           },
           b: {
             id: responseB.id,
             draft: responseB.draft as TypedEmail,
+            model: responseB.model,
           },
         },
       };

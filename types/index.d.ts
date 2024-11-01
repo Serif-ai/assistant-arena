@@ -1,4 +1,4 @@
-import { GroundTruth } from "@prisma/client";
+import { GroundTruth, Model } from "@prisma/client";
 
 export type TypedGroundTruth = Omit<GroundTruth, "email"> & {
   email: TypedEmail;
@@ -23,10 +23,12 @@ export interface ThreadWithResponses {
     a: {
       id: string;
       draft: TypedEmail;
+      model: Model;
     };
     b: {
       id: string;
       draft: TypedEmail;
+      model: Model;
     };
   };
 }

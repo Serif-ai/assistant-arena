@@ -150,8 +150,6 @@ export default function InternalClient() {
         formData.append("model", model);
       }
 
-      console.log("formData", formData);
-
       const response = await fetch("/api/internal/upload", {
         method: "POST",
         body: formData,
@@ -168,7 +166,9 @@ export default function InternalClient() {
         data.groundTruthCount
           ? `${data.groundTruthCount} ground truth responses`
           : "",
-      ].join(" and ")}.`;
+      ]
+        .filter(Boolean)
+        .join(" and ")}.`;
 
       toast.success(successMessage);
 
@@ -224,8 +224,7 @@ export default function InternalClient() {
               value={file}
             />
 
-            {(uploadType === UploadType.AI ||
-              uploadType === UploadType.GROUND_TRUTH) && (
+            {uploadType === UploadType.AI && (
               <div className="space-y-4 p-6 border-t">
                 <div className="space-y-2">
                   <Label>Organization</Label>
