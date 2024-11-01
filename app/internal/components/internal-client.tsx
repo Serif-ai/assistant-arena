@@ -123,6 +123,7 @@ export default function InternalClient() {
                 groundTruth: { content: "..." },
               }}
               onFileSelect={setEmailThreadFile}
+              value={emailThreadFile}
             />
           </div>
 
@@ -137,6 +138,7 @@ export default function InternalClient() {
                 response: "AI generated response content...",
               }}
               onFileSelect={setAiResponseFile}
+              value={aiResponseFile}
             />
 
             {aiResponseFile && (

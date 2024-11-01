@@ -2,17 +2,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VoteClient from "./components/vote-client";
 import LeaderboardClient from "./components/leaderboard-client";
 import { getThreads } from "@/lib/fetchers/thread";
-import { headers } from "next/headers";
 
 export default async function Home() {
-  const data = await getThreads();
-  const headersList = await headers();
-  const referer = headersList.get("referer");
-  console.log("referer", referer);
-
-  if (!data) {
-    return null;
-  }
+  const data = (await getThreads()) || { threads: [], userId: "" };
 
   return (
     <div className="container mx-auto py-8">

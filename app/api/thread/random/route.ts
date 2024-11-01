@@ -43,29 +43,37 @@ export async function GET(request: NextRequest) {
     acc[draft.threadId].push(draft);
     return acc;
   }, {} as Record<string, typeof drafts>);
+  console.log("responsesByThread", responsesByThread);
 
-  const threadData = threads.map((thread) => {
-    const threadResponses = responsesByThread[thread.id] || [];
-    const shuffledResponses = threadResponses.sort(() => Math.random() - 0.5);
-    const [responseA, responseB] = shuffledResponses.slice(0, 2);
+  const threadData = threads
+    .map((thread) => {
+      const threadResponses = responsesByThread[thread.id] || [];
 
-    return {
-      thread: {
-        id: thread.id,
-        messages: thread.messages,
-      },
-      responses: {
-        a: {
-          id: responseA.id,
-          content: responseA.content,
+      if (threadResponses.length < 2) {
+        return null;
+      }
+
+      const shuffledResponses = threadResponses.sort(() => Math.random() - 0.5);
+      const [responseA, responseB] = shuffledResponses.slice(0, 2);
+
+      return {
+        thread: {
+          id: thread.id,
+          messages: thread.messages,
         },
-        b: {
-          id: responseB.id,
-          content: responseB.content,
+        responses: {
+          a: {
+            id: responseA.id,
+            content: responseA.content,
+          },
+          b: {
+            id: responseB.id,
+            content: responseB.content,
+          },
         },
-      },
-    };
-  });
+      };
+    })
+    .filter((t) => t);
 
   return NextResponse.json({
     userId: user.id,
