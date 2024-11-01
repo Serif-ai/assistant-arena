@@ -19,57 +19,66 @@ model User {
   @@index([ip])
 }
 
-model EmailThread {
-  id          String       @id @default(cuid())
-  messages    Json[]
-  groundTruth Json         @default("{}")
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  responses   AIResponse[]
+model Thread {
+  id          String        @id @default(cuid())
+  userEmail   String
+  emails      Json[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  drafts      AIResponse[]
   votes       Vote[]
+  groundTruth GroundTruth[]
+}
+
+model GroundTruth {
+  id        String   @id @default(cuid())
+  email     Json
+  createdAt DateTime @default(now())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }
 
 model Model {
   id           String       @id @default(cuid())
   name         String
   organization String
-  eloRating    Int         @default(1500)
-  responses    AIResponse[]
-  votesWon     Vote[]      @relation("winnerModel")
-  votesLost    Vote[]      @relation("loserModel")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  eloRating    Int          @default(1500)
+  drafts       AIResponse[]
+  votesWon     Vote[]       @relation("winnerModel")
+  votesLost    Vote[]       @relation("loserModel")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([name, organization])
   @@index([organization])
 }
 
 model AIResponse {
-  id           String      @id @default(cuid())
-  content      String
-  threadId     String
-  thread       EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  modelId      String
-  model        Model       @relation(fields: [modelId], references: [id])
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  draft     Json
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  modelId   String
+  model     Model    @relation(fields: [modelId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([threadId])
   @@index([modelId])
 }
 
 model Vote {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  threadId        String
-  thread          EmailThread @relation(fields: [threadId], references: [id])
-  winnerModelId   String
-  winnerModel     Model       @relation("winnerModel", fields: [winnerModelId], references: [id])
-  loserModelId    String
-  loserModel      Model       @relation("loserModel", fields: [loserModelId], references: [id])
-  timeToVote      Int         // in seconds
-  createdAt       DateTime    @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  threadId      String
+  thread        Thread   @relation(fields: [threadId], references: [id])
+  winnerModelId String
+  winnerModel   Model    @relation("winnerModel", fields: [winnerModelId], references: [id])
+  loserModelId  String
+  loserModel    Model    @relation("loserModel", fields: [loserModelId], references: [id])
+  timeToVote    Int // in seconds
+  createdAt     DateTime @default(now())
 
   @@index([userId])
   @@index([threadId])

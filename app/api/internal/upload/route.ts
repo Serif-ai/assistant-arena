@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { UploadedAIResponse, UploadedEmailThread } from "@/types";
+import { UploadedAIResponse } from "@/types/ai-response";
 import { DEFAULT_ELO_RATING } from "@/const";
+import { EmailThreadCreateBody } from "@/types/thread";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const emailThreads = JSON.parse(
       (await emailThreadsFile?.text()) || "[]"
-    ) as UploadedEmailThread[];
+    ) as EmailThreadCreateBody[];
     const aiResponses = JSON.parse(
       (await aiResponsesFile?.text()) || "[]"
     ) as UploadedAIResponse[];
@@ -36,11 +37,11 @@ export async function POST(request: NextRequest) {
     let threadResults;
     if (emailThreads.length) {
       try {
-        threadResults = await prisma.emailThread.createMany({
+        threadResults = await prisma.thread.createMany({
           data: emailThreads.map((thread) => ({
             id: thread.id,
-            groundTruth: thread.groundTruth as Prisma.InputJsonValue,
-            messages: thread.thread as Prisma.InputJsonValue[],
+            emails: thread.emails as Prisma.InputJsonValue[],
+            userEmail: thread.userEmail,
           })),
           skipDuplicates: true,
         });
@@ -71,8 +72,8 @@ export async function POST(request: NextRequest) {
 
         responseResults = await prisma.aIResponse.createMany({
           data: aiResponses.map((response) => ({
-            content: response.response,
-            threadId: response.exampleId,
+            draft: response.draft,
+            threadId: response.threadId,
             modelId: model.id,
           })),
           skipDuplicates: true,

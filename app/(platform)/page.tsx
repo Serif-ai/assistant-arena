@@ -4,7 +4,11 @@ import LeaderboardClient from "./components/leaderboard-client";
 import { getThreads } from "@/lib/fetchers/thread";
 
 export default async function Home() {
-  const data = (await getThreads()) || { threads: [], userId: "" };
+  const data = (await getThreads()) || {
+    threads: [],
+    userId: "",
+    hasMore: false,
+  };
   let defaultTab = "vote";
 
   if (data.threads.length === 0) {
@@ -20,7 +24,11 @@ export default async function Home() {
         </TabsList>
 
         <TabsContent value="vote">
-          <VoteClient initialThreads={data.threads} userId={data.userId} />
+          <VoteClient
+            initialThreads={data.threads}
+            userId={data.userId}
+            initialHasMore={data.hasMore}
+          />
         </TabsContent>
 
         <TabsContent value="leaderboard">

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { BATCH_SIZE } from "@/const";
+import { ThreadWithResponses, TypedEmail } from "@/types";
+import { GetThreadsResponse } from "@/types/thread";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<GetThreadsResponse>> {
   let testIp = null;
   if (process.env.NODE_ENV === "development") {
     testIp = await fetch("https://freeipapi.com/api/json/")
@@ -22,7 +26,7 @@ export async function GET(request: NextRequest) {
     select: { threadId: true },
   });
 
-  let threads = await prisma.emailThread.findMany({
+  let threads = await prisma.thread.findMany({
     where: {
       id: { notIn: votedThreadIds.map((v) => v.threadId) },
     },
@@ -36,6 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       userId: user.id,
       threads: [],
+      hasMore: false,
     });
   }
 
@@ -54,7 +59,7 @@ export async function GET(request: NextRequest) {
   }, {} as Record<string, typeof drafts>);
   console.log("responsesByThread", responsesByThread);
 
-  const threadData = threads
+  const threadData: ThreadWithResponses[] = threads
     .map((thread) => {
       const threadResponses = responsesByThread[thread.id] || [];
 
@@ -68,21 +73,21 @@ export async function GET(request: NextRequest) {
       return {
         thread: {
           id: thread.id,
-          messages: thread.messages,
+          emails: thread.emails as TypedEmail[],
         },
         responses: {
           a: {
             id: responseA.id,
-            content: responseA.content,
+            draft: responseA.draft as TypedEmail,
           },
           b: {
             id: responseB.id,
-            content: responseB.content,
+            draft: responseB.draft as TypedEmail,
           },
         },
       };
     })
-    .filter((t) => t);
+    .filter((t): t is ThreadWithResponses => !!t);
 
   return NextResponse.json({
     userId: user.id,

@@ -86,11 +86,13 @@ export default function VotePage({
     <div className="max-w-4xl mx-auto p-4 space-y-8">
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
         <div className="border-b px-6 py-4">
-          <h2 className="font-semibold text-lg text-gray-800">Thread {currentIndex + 1}</h2>
+          <h2 className="font-semibold text-lg text-gray-800">
+            Thread {currentIndex + 1}
+          </h2>
         </div>
-        
+
         <div className="px-6 pb-6 space-y-6">
-          {current.thread.messages.map((msg, i) => (
+          {current.thread.emails.map((msg, i) => (
             <div key={i} className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {msg.from[0].toUpperCase()}
@@ -102,7 +104,7 @@ export default function VotePage({
                     {i === 0 ? "Original message" : `Reply #${i}`}
                   </span>
                 </div>
-                <div className="text-gray-700 leading-relaxed">{msg.content}</div>
+                <div className="text-gray-700 leading-relaxed">{msg.text}</div>
               </div>
             </div>
           ))}
@@ -128,7 +130,7 @@ export default function VotePage({
             <div className="flex-1 flex flex-col gap-4">
               <div className="bg-card p-6 rounded-lg min-h-[200px] flex-1">
                 <p className="whitespace-pre-wrap">
-                  {current.responses[side as "a" | "b"].content}
+                  {current.responses[side as "a" | "b"].draft.text}
                 </p>
               </div>
             </div>

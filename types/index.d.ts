@@ -1,38 +1,7 @@
-import {
-  User,
-  Organization,
-  EmailThread,
-  Message,
-  AIResponse,
-} from "@prisma/client";
+import { GroundTruth } from "@prisma/client";
 
-export type TypedOrganization = Organization;
-
-export type TypedEmailThread = EmailThread;
-
-export type TypedMessage = Message;
-
-export type TypedAIResponse = AIResponse;
-
-export type TypedUser = User;
-
-export type UploadedMessage = {
-  from: string;
-  content: string;
-};
-
-export type UploadedEmailThread = {
-  id: string;
-  thread: UploadedMessage[];
-  groundTruth: {
-    content: string;
-  };
-};
-
-export type UploadedAIResponse = {
-  id: string;
-  response: string;
-  exampleId: string;
+export type TypedGroundTruth = Omit<GroundTruth, "email"> & {
+  email: TypedEmail;
 };
 
 export type VoteRequestBody = {
@@ -43,23 +12,28 @@ export type VoteRequestBody = {
   timeToVote: number;
 };
 
-interface Thread {
-  id: string;
-  messages: Array<{
-    from: string;
-    content: string;
-  }>;
-}
-
-interface Response {
-  id: string;
-  content: string;
-}
-
 export interface ThreadWithResponses {
-  thread: Thread;
+  thread: {
+    id: string;
+    emails: Array<TypedEmail>;
+  };
   responses: {
-    a: Response;
-    b: Response;
+    a: {
+      id: string;
+      draft: TypedEmail;
+    };
+    b: {
+      id: string;
+      draft: TypedEmail;
+    };
   };
 }
+
+export type TypedEmail = {
+  subject: string;
+  from: string;
+  to: string;
+  cc: string;
+  date: string;
+  text: string;
+};
