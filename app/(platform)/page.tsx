@@ -5,10 +5,15 @@ import { getThreads } from "@/lib/fetchers/thread";
 
 export default async function Home() {
   const data = (await getThreads()) || { threads: [], userId: "" };
+  let defaultTab = "vote";
+
+  if (data.threads.length === 0) {
+    defaultTab = "leaderboard";
+  }
 
   return (
     <div className="container mx-auto py-8">
-      <Tabs defaultValue="vote" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="vote">Vote</TabsTrigger>
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
