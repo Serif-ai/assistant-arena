@@ -25,7 +25,7 @@ export async function GET() {
       assistant: model.name,
       organization: model.organization,
       arenaScore: Math.round(model.eloRating),
-      votes: model._count.votesLost + model._count.votesWon, // Total votes
+      votes: model._count.votesLost + model._count.votesWon,
     }));
 
     return NextResponse.json(leaderboard);

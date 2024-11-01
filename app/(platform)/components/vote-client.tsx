@@ -99,7 +99,6 @@ export default function VotePage({
                 <div className="flex items-baseline gap-2">
                   <span className="font-medium text-gray-900">{msg.from}</span>
                   <span className="text-xs text-gray-500">
-                    {/* You can add a timestamp here if available */}
                     {i === 0 ? "Original message" : `Reply #${i}`}
                   </span>
                 </div>

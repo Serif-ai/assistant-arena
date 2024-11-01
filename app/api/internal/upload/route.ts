@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { UploadedAIResponse, UploadedEmailThread } from "@/types";
+import { DEFAULT_ELO_RATING } from "@/const";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create email threads
     let threadResults;
     if (emailThreads.length) {
       try {
@@ -45,14 +45,12 @@ export async function POST(request: NextRequest) {
           skipDuplicates: true,
         });
         console.log("threadResults", threadResults);
-        
       } catch (error) {
         console.error("Error creating email threads:", error);
         throw error;
       }
     }
 
-    // Create AI responses linked to the model
     let responseResults;
     if (aiResponses.length && modelName && organization) {
       try {
@@ -66,9 +64,9 @@ export async function POST(request: NextRequest) {
           create: {
             name: modelName,
             organization: organization,
-            eloRating: 1500, // Default starting ELO
+            eloRating: DEFAULT_ELO_RATING,
           },
-          update: {}, // No updates if it exists
+          update: {},
         });
 
         responseResults = await prisma.aIResponse.createMany({
