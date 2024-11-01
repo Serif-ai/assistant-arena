@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    // Get models with their vote counts
     const models = await prisma.model.findMany({
       select: {
         id: true,
@@ -13,22 +12,20 @@ export async function GET() {
         _count: {
           select: {
             votesWon: true,
-            responses: true,
-          }
-        }
+            votesLost: true,
+          },
+        },
       },
       orderBy: {
-        eloRating: 'desc'
-      }
+        eloRating: "desc",
+      },
     });
 
-    // Format the response
     const leaderboard = models.map((model) => ({
       assistant: model.name,
       organization: model.organization,
       arenaScore: Math.round(model.eloRating),
-      votes: model._count.responses, // Total responses
-      wins: model._count.votesWon,   // Winning votes
+      votes: model._count.votesLost + model._count.votesWon, // Total votes
     }));
 
     return NextResponse.json(leaderboard);

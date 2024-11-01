@@ -84,14 +84,30 @@ export default function VotePage({
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8">
-      <div className="space-y-4 bg-muted p-6 rounded-lg">
-        <h2 className="font-semibold text-lg">Thread {currentIndex + 1}</h2>
-        {current.thread.messages.map((msg, i) => (
-          <div key={i} className="space-y-1">
-            <div className="text-sm font-medium">{msg.from}</div>
-            <div className="text-sm">{msg.content}</div>
-          </div>
-        ))}
+      <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
+        <div className="border-b px-6 py-4">
+          <h2 className="font-semibold text-lg text-gray-800">Thread {currentIndex + 1}</h2>
+        </div>
+        
+        <div className="px-6 pb-6 space-y-6">
+          {current.thread.messages.map((msg, i) => (
+            <div key={i} className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                {msg.from[0].toUpperCase()}
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-medium text-gray-900">{msg.from}</span>
+                  <span className="text-xs text-gray-500">
+                    {/* You can add a timestamp here if available */}
+                    {i === 0 ? "Original message" : `Reply #${i}`}
+                  </span>
+                </div>
+                <div className="text-gray-700 leading-relaxed">{msg.content}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
