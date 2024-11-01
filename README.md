@@ -1,36 +1,11 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+AssistantArena is our take on an anonymous evaluation metric to test personalized assistants.
 
-## Getting Started
+While tools like Chatbot Arena exist for testing foundational models and SWE Bench + plenty more benchmarks exist to evaluate coding agents, evaluating personalized assistants requires a lot more context.
 
-First, run the development server:
+Unlike foundational models that are “stateless” and have a unified "text in, text out" API, assistants are often personalized for each user and have different interfaces (for example generating emails via a Chrome Extension vs API). AssistantArena aims to address this by curating and sharing public datasets for different assistant capabilities, starting with email, and hosting an open source evaluation tool where the community can rank assistants.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Every quarter, we'll release new datasets of sample inboxes and collaborate with developers of assistants to generate 50 test responses for each inbox. These responses will reply to emails sent to the inbox owner, with the owner's actual response hidden from the model and saved as "ground truth" for later comparison.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Once all submissions are collected, the responses will be compiled into a blind dataset. The community will then vote on which response is the best. To provide context during voting, voters will see the entire email thread (for threads with multiple emails) and the actual "ground truth" email sent by the inbox owner.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This first iteration will use three inboxes—one personal, one work, and one for customer support—along with four of the most popular email assistants (Gemini, Superhuman, Microsoft Copilot, and Serif).
