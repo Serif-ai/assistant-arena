@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-
-const BATCH_SIZE = 5; // Number of threads to return at once
+import { BATCH_SIZE } from "@/const";
 
 export async function GET(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  let testIp = null;
+  if (process.env.NODE_ENV === "development") {
+    testIp = await fetch("https://freeipapi.com/api/json/")
+      .then((res) => res.json())
+      .then((data) => data.ipAddress);
+  }
+  const ip = testIp || request.headers.get("x-forwarded-for") || "unknown";
+
   const user = await prisma.user.upsert({
     where: { ip },
     create: { ip },
@@ -16,12 +22,15 @@ export async function GET(request: NextRequest) {
     select: { threadId: true },
   });
 
-  const threads = await prisma.emailThread.findMany({
+  let threads = await prisma.emailThread.findMany({
     where: {
       id: { notIn: votedThreadIds.map((v) => v.threadId) },
     },
-    take: BATCH_SIZE,
+    take: BATCH_SIZE + 1,
   });
+
+  const hasMore = threads.length > BATCH_SIZE;
+  threads = threads.slice(0, BATCH_SIZE);
 
   if (!threads.length) {
     return NextResponse.json({
@@ -78,5 +87,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     userId: user.id,
     threads: threadData,
+    hasMore,
   });
 }
