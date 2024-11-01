@@ -2,12 +2,13 @@ import { ThreadWithResponses } from "@/types";
 import { callApi } from "../utils";
 
 export const getThreads = async () => {
-  const resp = await callApi("/api/thread/random");
+  const resp = await callApi<{
+    userId: string;
+    threads: ThreadWithResponses[];
+  }>("/api/thread/random");
+
   if (resp.success) {
-    return resp.data as {
-      userId: string;
-      threads: ThreadWithResponses[];
-    };
+    return resp.data;
   } else {
     return null;
   }

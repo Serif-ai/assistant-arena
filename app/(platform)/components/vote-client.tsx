@@ -18,14 +18,15 @@ export default function VotePage({
   const [startTime] = useState(Date.now());
   const [voted, setVoted] = useState(false);
   const [fetchingMore, setFetchingMore] = useState(false);
+  const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(null);
 
-  const handleVote = async (winner: "a" | "b") => {
-    if (!userId || !threads[currentIndex]) return;
+  const handleVote = async () => {
+    if (!userId || !threads[currentIndex] || !selectedResponse) return;
 
     const current = threads[currentIndex];
     const timeToVote = Math.round((Date.now() - startTime) / 1000);
-    const winnerId = current.responses[winner].id;
-    const loserId = current.responses[winner === "a" ? "b" : "a"].id;
+    const winnerId = current.responses[selectedResponse].id;
+    const loserId = current.responses[selectedResponse === "a" ? "b" : "a"].id;
 
     try {
       await vote({
@@ -100,7 +101,10 @@ export default function VotePage({
           {["a", "b"].map((side) => (
             <div
               key={side}
-              className="space-y-4 border p-6 rounded-lg flex flex-col"
+              className={`space-y-4 border p-6 rounded-lg flex flex-col cursor-pointer transition-colors
+                ${selectedResponse === side ? 'border-primary border-2' : 'hover:border-primary/50'}
+              `}
+              onClick={() => !voted && setSelectedResponse(side as "a" | "b")}
             >
               <div className="text-sm text-muted-foreground">
                 Assistant {side.toUpperCase()}
@@ -111,26 +115,26 @@ export default function VotePage({
                     {current.responses[side as "a" | "b"].content}
                   </p>
                 </div>
-                <Button
-                  className="w-full"
-                  onClick={() => handleVote(side as "a" | "b")}
-                  disabled={voted}
-                >
-                  <ThumbsUp className="mr-2" />
-                  Vote for Response {side.toUpperCase()}
-                </Button>
               </div>
             </div>
           ))}
         </div>
 
-        {voted && (
-          <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
+          {!voted ? (
+            <Button
+              onClick={handleVote}
+              disabled={!selectedResponse}
+            >
+              <ThumbsUp className="mr-2" />
+              Submit Vote
+            </Button>
+          ) : (
             <Button onClick={handleNext} variant="outline">
               Next Thread
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

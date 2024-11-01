@@ -15,8 +15,8 @@ export default function LeaderboardClient() {
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof LeaderboardEntry;
-    direction: 'asc' | 'desc';
-  }>({ key: 'arenaScore', direction: 'desc' });
+    direction: "asc" | "desc";
+  }>({ key: "arenaScore", direction: "desc" });
 
   useEffect(() => {
     fetchLeaderboard();
@@ -40,12 +40,14 @@ export default function LeaderboardClient() {
     setSortConfig({
       key,
       direction:
-        sortConfig.key === key && sortConfig.direction === 'desc' ? 'asc' : 'desc',
+        sortConfig.key === key && sortConfig.direction === "desc"
+          ? "asc"
+          : "desc",
     });
   };
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => {
-    if (sortConfig.direction === 'asc') {
+    if (sortConfig.direction === "asc") {
       return a[sortConfig.key] < b[sortConfig.key] ? -1 : 1;
     }
     return a[sortConfig.key] > b[sortConfig.key] ? -1 : 1;
@@ -70,7 +72,7 @@ export default function LeaderboardClient() {
             <tr className="border-b bg-muted/50">
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('assistant')}
+                  onClick={() => handleSort("assistant")}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   Assistant
@@ -79,7 +81,7 @@ export default function LeaderboardClient() {
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('arenaScore')}
+                  onClick={() => handleSort("arenaScore")}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   Arena Score
@@ -88,7 +90,7 @@ export default function LeaderboardClient() {
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('votes')}
+                  onClick={() => handleSort("votes")}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   Votes
@@ -97,7 +99,7 @@ export default function LeaderboardClient() {
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('organization')}
+                  onClick={() => handleSort("organization")}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   Organization
@@ -107,19 +109,12 @@ export default function LeaderboardClient() {
             </tr>
           </thead>
           <tbody>
-            {sortedLeaderboard.map((entry, index) => (
+            {sortedLeaderboard.map((entry) => (
               <tr
                 key={entry.assistant}
                 className="border-b transition-colors hover:bg-muted/50"
               >
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    {index === 0 && (
-                      <Trophy className="h-4 w-4 text-yellow-500" />
-                    )}
-                    {entry.assistant}
-                  </div>
-                </td>
+                <td className="p-4">{entry.assistant}</td>
                 <td className="p-4">{entry.arenaScore}</td>
                 <td className="p-4">{entry.votes}</td>
                 <td className="p-4">{entry.organization}</td>
