@@ -53,6 +53,17 @@ export async function GET(
     },
   });
 
+  const groundTruths = await prisma.groundTruth.findMany({
+    where: {
+      threadId: { in: threads.map((t) => t.id) },
+    },
+  });
+
+  const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
+    acc[groundTruth.threadId] = groundTruth;
+    return acc;
+  }, {} as Record<string, (typeof groundTruths)[0]>);
+
   const responsesByThread = drafts.reduce((acc, draft) => {
     if (!acc[draft.threadId]) {
       acc[draft.threadId] = [];
@@ -60,11 +71,11 @@ export async function GET(
     acc[draft.threadId].push(draft);
     return acc;
   }, {} as Record<string, typeof drafts>);
-  console.log("responsesByThread", responsesByThread);
 
   const threadData: ThreadWithResponses[] = threads
     .map((thread) => {
       const threadResponses = responsesByThread[thread.id] || [];
+      const groundTruth = groundTruthByThread[thread.id];
 
       if (threadResponses.length < 2) {
         return null;
@@ -90,9 +101,14 @@ export async function GET(
             model: responseB.model,
           },
         },
-      };
+        groundTruth: groundTruth
+          ? {
+              email: groundTruth.email as TypedEmail,
+            }
+          : undefined,
+      } as ThreadWithResponses;
     })
-    .filter((t): t is ThreadWithResponses => !!t);
+    .filter((t): t is NonNullable<typeof t> => !!t);
 
   return NextResponse.json({
     userId: user.id,

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp, ChevronDown, ChevronUp } from "lucide-react";
 import { vote } from "@/lib/actions/vote";
 import { ThreadWithResponses } from "@/types";
 import { toast } from "sonner";
@@ -31,6 +31,9 @@ export default function VotePage({
     null
   );
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [showGroundTruth, setShowGroundTruth] = useState(false);
+  const [expandedEmails, setExpandedEmails] = useState(false);
+  const MAX_VISIBLE_EMAILS = 2;
 
   const currentThread = useMemo(
     () => threads[currentIndex],
@@ -96,51 +99,117 @@ export default function VotePage({
     <div className="max-w-4xl mx-auto p-4 space-y-8">
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
         <div className="border-b px-6 py-4">
-          <h2 className="font-semibold text-lg text-gray-800">
-            Thread {currentIndex + 1}
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold text-lg text-gray-800">
+              Thread {currentIndex + 1}
+            </h2>
+            {currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedEmails(!expandedEmails)}
+                className="flex items-center gap-2"
+              >
+                {expandedEmails ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show All ({currentThread.thread.emails.length} emails)
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="px-6 pb-6 space-y-6">
-          {currentThread.thread.emails.map((msg, i) => (
-            <div key={i} className="space-y-4 border-b last:border-b-0 pb-4">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  {msg.from[0].toUpperCase()}
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div className="flex flex-col space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-medium text-gray-900">
-                          {msg.from}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {i === 0 ? "Original message" : `Reply #${i}`}
+          {currentThread.thread.emails
+            .slice(0, expandedEmails ? undefined : MAX_VISIBLE_EMAILS)
+            .map((msg, i) => (
+              <div key={i} className="space-y-4 border-b last:border-b-0 pb-4">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    {msg.from[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-medium text-gray-900">
+                            {msg.from}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {i === 0 ? "Original message" : `Reply #${i}`}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {formatDate(msg.date)}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-500">{formatDate(msg.date)}</span>
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">To:</span> {msg.to}
+                        {msg.cc && (
+                          <div>
+                            <span className="font-medium">Cc:</span> {msg.cc}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium text-gray-800">
+                        Subject: {msg.subject}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">To:</span> {msg.to}
-                      {msg.cc && (
-                        <div>
-                          <span className="font-medium">Cc:</span> {msg.cc}
-                        </div>
-                      )}
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {msg.text}
                     </div>
-                    <div className="text-sm font-medium text-gray-800">
-                      Subject: {msg.subject}
-                    </div>
-                  </div>
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {msg.text}
                   </div>
                 </div>
               </div>
+            ))}
+          
+          {!expandedEmails && currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
+            <div className="text-center text-sm text-gray-500">
+              {currentThread.thread.emails.length - MAX_VISIBLE_EMAILS} more emails hidden
             </div>
-          ))}
+          )}
         </div>
+      </div>
+
+      <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="font-semibold text-lg text-gray-800">Ground Truth</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowGroundTruth(!showGroundTruth)}
+          >
+            {showGroundTruth ? "Hide" : "Show"} Reference
+          </Button>
+        </div>
+
+        {showGroundTruth && (
+          <div className="px-6 pb-6">
+            <div className="bg-muted/30 p-6 rounded-lg">
+              {currentThread.groundTruth ? (
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    Original Response
+                  </div>
+                  <p className="whitespace-pre-wrap text-gray-700">
+                    {currentThread.groundTruth.email.text}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No ground truth available for this thread.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">

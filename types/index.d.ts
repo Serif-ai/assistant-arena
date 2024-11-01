@@ -31,6 +31,9 @@ export interface ThreadWithResponses {
       model: Model;
     };
   };
+  groundTruth?: {
+    email: TypedEmail;
+  };
 }
 
 export type TypedEmail = {
