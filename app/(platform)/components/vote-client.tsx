@@ -96,11 +96,11 @@ export default function VotePage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-8">
+    <div className="max-w-4xl mx-auto p-2 sm:p-4 space-y-4 sm:space-y-8">
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
-        <div className="border-b px-6 py-4">
-          <div className="flex justify-between items-center">
-            <h2 className="font-semibold text-lg text-gray-800">
+        <div className="border-b px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <h2 className="font-semibold text-base sm:text-lg text-gray-800">
               Thread {currentIndex + 1}
             </h2>
             {currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
@@ -108,7 +108,7 @@ export default function VotePage({
                 variant="ghost"
                 size="sm"
                 onClick={() => setExpandedEmails(!expandedEmails)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-sm"
               >
                 {expandedEmails ? (
                   <>
@@ -126,7 +126,7 @@ export default function VotePage({
           </div>
         </div>
 
-        <div className="px-6 pb-6 space-y-6">
+        <div className="px-3 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6">
           {currentThread.thread.emails
             .slice(0, expandedEmails ? undefined : MAX_VISIBLE_EMAILS)
             .map((msg, i) => (
@@ -136,8 +136,8 @@ export default function VotePage({
                     {msg.from[0].toUpperCase()}
                   </div>
                   <div className="flex-1 space-y-3">
-                    <div className="flex flex-col space-y-1">
-                      <div className="flex items-center justify-between">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                         <div className="flex items-baseline gap-2">
                           <span className="font-medium text-gray-900">
                             {msg.from}
@@ -146,20 +146,22 @@ export default function VotePage({
                             {i === 0 ? "Original message" : `Reply #${i}`}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500">
                           {formatDate(msg.date)}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <span className="font-medium">To:</span> {msg.to}
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">To:</span> {msg.to}
+                        </div>
                         {msg.cc && (
-                          <div>
+                          <div className="text-sm text-gray-600">
                             <span className="font-medium">Cc:</span> {msg.cc}
                           </div>
                         )}
-                      </div>
-                      <div className="text-sm font-medium text-gray-800">
-                        Subject: {msg.subject}
+                        <div className="text-sm font-medium text-gray-800">
+                          Subject: {msg.subject}
+                        </div>
                       </div>
                     </div>
                     <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -171,16 +173,22 @@ export default function VotePage({
             ))}
           
           {!expandedEmails && currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
-            <div className="text-center text-sm text-gray-500">
-              {currentThread.thread.emails.length - MAX_VISIBLE_EMAILS} more emails hidden
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpandedEmails(true)}
+              className="w-full flex items-center justify-center gap-2 text-sm text-gray-500"
+            >
+              <ChevronDown className="h-4 w-4" />
+              Show All ({currentThread.thread.emails.length - MAX_VISIBLE_EMAILS} more emails)
+            </Button>
           )}
         </div>
       </div>
 
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
-        <div className="border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="font-semibold text-lg text-gray-800">Ground Truth</h2>
+        <div className="border-b px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <h2 className="font-semibold text-base sm:text-lg text-gray-800">Ground Truth</h2>
           <Button
             variant="ghost"
             size="sm"
@@ -191,7 +199,7 @@ export default function VotePage({
         </div>
 
         {showGroundTruth && (
-          <div className="px-6 pb-6">
+          <div className="px-3 sm:px-6 pb-4 sm:pb-6">
             <div className="bg-muted/30 p-6 rounded-lg">
               {currentThread.groundTruth ? (
                 <div className="space-y-3">
@@ -212,11 +220,11 @@ export default function VotePage({
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
         {["a", "b"].map((side) => (
           <div
             key={side}
-            className={`space-y-4 border p-6 rounded-lg flex flex-col cursor-pointer transition-colors
+            className={`space-y-4 border p-3 sm:p-6 rounded-lg flex flex-col cursor-pointer transition-colors
                 ${
                   selectedResponse === side
                     ? "border-primary border-2"
@@ -227,11 +235,10 @@ export default function VotePage({
           >
             <div className="text-sm text-muted-foreground">
               Assistant {side.toUpperCase()}
-              {/* {currentThread.responses[side as "a" | "b"].model.name} */}
             </div>
             <div className="flex-1 flex flex-col gap-4">
-              <div className="bg-card p-6 rounded-lg min-h-[200px] flex-1">
-                <p className="whitespace-pre-wrap">
+              <div className="bg-card p-3 sm:p-6 rounded-lg min-h-[150px] sm:min-h-[200px] flex-1">
+                <p className="whitespace-pre-wrap text-sm sm:text-base">
                   {currentThread.responses[side as "a" | "b"].draft.text}
                 </p>
               </div>
