@@ -76,7 +76,7 @@ export default function LeaderboardClient() {
                 { key: "votes", label: "Votes" },
                 { key: "organization", label: "Organization" },
               ].map((column) => (
-                <th key={column.key} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:not(:first-child)]:hidden sm:table-cell">
+                <th key={column.key} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">
                   <button
                     onClick={() => handleSort(column.key as keyof LeaderboardEntry)}
                     className="inline-flex items-center gap-2 hover:text-foreground transition-colors"
@@ -86,6 +86,15 @@ export default function LeaderboardClient() {
                   </button>
                 </th>
               ))}
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground sm:hidden">
+                <button
+                  onClick={() => handleSort("assistant")}
+                  className="inline-flex items-center gap-2 hover:text-foreground transition-colors"
+                >
+                  Assistant
+                  <ArrowUpDown className="h-4 w-4" />
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
