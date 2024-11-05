@@ -25,7 +25,7 @@ export default function Header() {
     <>
       <header className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center gap-8">
             <div className="flex items-center">
               <Bot className="h-8 w-8 text-blue-600" />
               <span className="ml-2 text-xl font-bold">Assistant Arena</span>
