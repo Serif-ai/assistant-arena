@@ -58,9 +58,17 @@ export default function LeaderboardClient() {
       <div className="flex justify-center items-center min-h-[300px]">
         <div className="animate-pulse flex flex-col items-center space-y-2">
           <Trophy className="h-8 w-8 text-primary/70" />
-          <div className="text-muted-foreground font-medium">Loading leaderboard...</div>
+          <div className="text-muted-foreground font-medium">
+            Loading leaderboard...
+          </div>
         </div>
       </div>
+    );
+  }
+
+  if (!sortedLeaderboard.length) {
+    return (
+      <div className="flex justify-center p-8">No more data available</div>
     );
   }
 
@@ -76,9 +84,14 @@ export default function LeaderboardClient() {
                 { key: "votes", label: "Votes" },
                 { key: "organization", label: "Organization" },
               ].map((column) => (
-                <th key={column.key} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">
+                <th
+                  key={column.key}
+                  className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell"
+                >
                   <button
-                    onClick={() => handleSort(column.key as keyof LeaderboardEntry)}
+                    onClick={() =>
+                      handleSort(column.key as keyof LeaderboardEntry)
+                    }
                     className="inline-flex items-center gap-2 hover:text-foreground transition-colors"
                   >
                     {column.label}
@@ -106,11 +119,15 @@ export default function LeaderboardClient() {
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     {index < 3 && (
-                      <Trophy className={`h-5 w-5 ${
-                        index === 0 ? 'text-yellow-500' :
-                        index === 1 ? 'text-gray-400' :
-                        'text-amber-600'
-                      }`} />
+                      <Trophy
+                        className={`h-5 w-5 ${
+                          index === 0
+                            ? "text-yellow-500"
+                            : index === 1
+                            ? "text-gray-400"
+                            : "text-amber-600"
+                        }`}
+                      />
                     )}
                     <span className="font-medium">{entry.assistant}</span>
                     <div className="flex flex-col sm:hidden ml-4">
@@ -128,7 +145,9 @@ export default function LeaderboardClient() {
                 </td>
                 <td className="p-4 hidden sm:table-cell">{entry.arenaScore}</td>
                 <td className="p-4 hidden sm:table-cell">{entry.votes}</td>
-                <td className="p-4 hidden sm:table-cell">{entry.organization}</td>
+                <td className="p-4 hidden sm:table-cell">
+                  {entry.organization}
+                </td>
               </tr>
             ))}
           </tbody>
