@@ -111,24 +111,13 @@ export default function LeaderboardClient() {
             </tr>
           </thead>
           <tbody>
-            {sortedLeaderboard.map((entry, index) => (
+            {sortedLeaderboard.map((entry) => (
               <tr
                 key={entry.assistant}
                 className="border-b transition-colors hover:bg-muted/50 group"
               >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    {index < 3 && (
-                      <Trophy
-                        className={`h-5 w-5 ${
-                          index === 0
-                            ? "text-yellow-500"
-                            : index === 1
-                            ? "text-gray-400"
-                            : "text-amber-600"
-                        }`}
-                      />
-                    )}
                     <span className="font-medium">{entry.assistant}</span>
                     <div className="flex flex-col sm:hidden ml-4">
                       <span className="text-sm text-muted-foreground">
