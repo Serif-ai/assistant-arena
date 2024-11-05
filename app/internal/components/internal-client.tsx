@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { upload } from "@/lib/actions/upload";
 
 enum UploadType {
   EMAIL = "email",
@@ -150,16 +151,12 @@ export default function InternalClient() {
         formData.append("model", model);
       }
 
-      const response = await fetch("/api/internal/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
+      const response = await upload(formData);
+      if (!response.success) {
         throw new Error("Upload failed");
       }
 
-      const data = await response.json();
+      const data = response.data;
       const successMessage = `Processed ${[
         data.threadCount ? `${data.threadCount} threads` : "",
         data.responseCount ? `${data.responseCount} AI responses` : "",

@@ -7,6 +7,9 @@ import { GetThreadsResponse } from "@/types/thread";
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
+  const exclude = request.nextUrl.searchParams.get("exclude");
+  const excludeThreadIds = exclude ? exclude.split(",") : [];
+
   let testIp = null;
   if (process.env.NODE_ENV === "development") {
     testIp = await fetch("https://freeipapi.com/api/json/")
@@ -28,13 +31,15 @@ export async function GET(
 
   let threads = await prisma.thread.findMany({
     where: {
-      id: { notIn: votedThreadIds.map((v) => v.threadId) },
+      id: {
+        notIn: [...votedThreadIds.map((v) => v.threadId), ...excludeThreadIds],
+      },
     },
     take: BATCH_SIZE + 1,
   });
 
   const hasMore = threads.length > BATCH_SIZE;
-  threads = threads.slice(0, BATCH_SIZE);
+  threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
 
   if (!threads.length) {
     return NextResponse.json({

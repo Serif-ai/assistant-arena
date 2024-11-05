@@ -1,36 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ChevronDown, ChevronUp } from "lucide-react";
 import { vote } from "@/lib/actions/vote";
 import { ThreadWithResponses } from "@/types";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
+import { getThreads } from "@/lib/fetchers/thread";
 
 const formatDate = (dateString: string) => {
   const date = parseISO(dateString);
   return format(date, "MMM d, yyyy 'at' h:mm a");
 };
 
-export default function VotePage({
-  initialThreads,
-  userId,
-  initialHasMore,
-}: {
-  initialThreads: ThreadWithResponses[];
-  userId: string;
-  initialHasMore: boolean;
-}) {
-  const [threads, setThreads] = useState<ThreadWithResponses[]>(initialThreads);
+export default function VotePage() {
+  const [threads, setThreads] = useState<ThreadWithResponses[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startTime] = useState(Date.now());
   const [voted, setVoted] = useState(false);
+  const [userId, setUserId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(
     null
   );
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [hasMore, setHasMore] = useState(false);
   const [showGroundTruth, setShowGroundTruth] = useState(false);
   const [expandedEmails, setExpandedEmails] = useState(false);
   const MAX_VISIBLE_EMAILS = 2;
@@ -40,10 +35,24 @@ export default function VotePage({
     [threads, currentIndex]
   );
 
+  useEffect(() => {
+    const init = async () => {
+      setIsLoading(true);
+      const data = await getThreads();
+      if (data) {
+        setThreads(data.threads);
+        setHasMore(data.hasMore);
+        setUserId(data.userId);
+      }
+      setIsLoading(false);
+    };
+    init();
+  }, []);
+
   const handleVote = async () => {
     if (!userId || !threads[currentIndex] || !selectedResponse) return;
 
-    setIsLoading(true);
+    setIsVoting(true);
 
     const timeToVote = Math.round((Date.now() - startTime) / 1000);
     const winnerId = currentThread.responses[selectedResponse].id;
@@ -60,15 +69,11 @@ export default function VotePage({
       });
 
       if (currentIndex >= threads.length - 2 && hasMore) {
-        const res = await fetch("/api/thread/random");
-        if (res.ok) {
-          const data = await res.json();
+        const data = await getThreads(threads.map((t) => t.thread.id));
+        if (data) {
           setThreads((prev) => [
             ...prev,
-            {
-              thread: data.thread,
-              responses: data.responses,
-            },
+            ...data.threads.filter((t) => !prev.includes(t)),
           ]);
           setHasMore(data.hasMore);
         }
@@ -80,7 +85,7 @@ export default function VotePage({
       toast.error("Vote failed. Something went wrong");
       console.error("Error submitting vote:", error);
     } finally {
-      setIsLoading(false);
+      setIsVoting(false);
     }
   };
 
@@ -88,6 +93,15 @@ export default function VotePage({
     setVoted(false);
     setCurrentIndex((prev) => prev + 1);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 space-y-4">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        <p className="text-muted-foreground text-sm">Loading threads...</p>
+      </div>
+    );
+  }
 
   if (!currentThread) {
     return (
@@ -171,24 +185,29 @@ export default function VotePage({
                 </div>
               </div>
             ))}
-          
-          {!expandedEmails && currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setExpandedEmails(true)}
-              className="w-full flex items-center justify-center gap-2 text-sm text-gray-500"
-            >
-              <ChevronDown className="h-4 w-4" />
-              Show All ({currentThread.thread.emails.length - MAX_VISIBLE_EMAILS} more emails)
-            </Button>
-          )}
+
+          {!expandedEmails &&
+            currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedEmails(true)}
+                className="w-full flex items-center justify-center gap-2 text-sm text-gray-500"
+              >
+                <ChevronDown className="h-4 w-4" />
+                Show All (
+                {currentThread.thread.emails.length - MAX_VISIBLE_EMAILS} more
+                emails)
+              </Button>
+            )}
         </div>
       </div>
 
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
         <div className="border-b px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <h2 className="font-semibold text-base sm:text-lg text-gray-800">Ground Truth</h2>
+          <h2 className="font-semibold text-base sm:text-lg text-gray-800">
+            Ground Truth
+          </h2>
           <Button
             variant="ghost"
             size="sm"
@@ -249,11 +268,8 @@ export default function VotePage({
 
       <div className="flex justify-center gap-4">
         {!voted ? (
-          <Button
-            onClick={handleVote}
-            disabled={!selectedResponse || isLoading}
-          >
-            {isLoading ? (
+          <Button onClick={handleVote} disabled={!selectedResponse || isVoting}>
+            {isVoting ? (
               <>
                 <span className="animate-spin mr-2">⏳</span>
                 Submitting...

@@ -1,19 +1,9 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VoteClient from "./components/vote-client";
 import LeaderboardClient from "./components/leaderboard-client";
-import { getThreads } from "@/lib/fetchers/thread";
 
 export default async function Home() {
-  const data = (await getThreads()) || {
-    threads: [],
-    userId: "",
-    hasMore: false,
-  };
-  let defaultTab = "vote";
-
-  if (data.threads.length === 0) {
-    defaultTab = "leaderboard";
-  }
+  const defaultTab = "vote";
 
   return (
     <div className="container mx-auto py-8">
@@ -24,11 +14,7 @@ export default async function Home() {
         </TabsList>
 
         <TabsContent value="vote">
-          <VoteClient
-            initialThreads={data.threads}
-            userId={data.userId}
-            initialHasMore={data.hasMore}
-          />
+          <VoteClient />
         </TabsContent>
 
         <TabsContent value="leaderboard">

@@ -10,7 +10,7 @@ export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 export const callApi = async <T = undefined>(
   path: string,
   options?: RequestInit
-): Promise<{ success: boolean; data?: T; error?: unknown }> => {
+): Promise<{ success: true; data: T } | { success: false; error: unknown }> => {
   try {
     const resp = await fetch(`${baseUrl}${path}`, options);
 
