@@ -3,15 +3,12 @@ import prisma from "@/lib/prisma";
 import { BATCH_SIZE } from "@/const";
 import { ThreadWithResponses, TypedEmail } from "@/types";
 import { GetThreadsResponse } from "@/types/thread";
-import { startDebug } from "@/lib/utils";
 
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
-
-  const { debug, pushDebug, endDebug } = startDebug();
 
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   const user = await prisma.user.upsert({
@@ -20,8 +17,6 @@ export async function GET(
     update: {},
     select: { id: true },
   });
-
-  pushDebug("user");
 
   const [votedThreadIds, initialThreads] = await Promise.all([
     prisma.vote.findMany({
@@ -37,10 +32,9 @@ export async function GET(
       take: BATCH_SIZE * 2,
     }),
   ]);
-  pushDebug("parallel_queries");
 
-  const votedIds = new Set(votedThreadIds.map(v => v.threadId));
-  let threads = initialThreads.filter(t => !votedIds.has(t.id));
+  const votedIds = new Set(votedThreadIds.map((v) => v.threadId));
+  let threads = initialThreads.filter((t) => !votedIds.has(t.id));
 
   const hasMore = threads.length > BATCH_SIZE;
   threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
@@ -53,7 +47,7 @@ export async function GET(
     });
   }
 
-  const threadIds = threads.map(t => t.id);
+  const threadIds = threads.map((t) => t.id);
 
   const [drafts, groundTruths] = await Promise.all([
     prisma.aIResponse.findMany({
@@ -64,7 +58,6 @@ export async function GET(
       where: { threadId: { in: threadIds } },
     }),
   ]);
-  pushDebug("parallel_content_queries");
 
   const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
     acc[groundTruth.threadId] = groundTruth;
@@ -78,7 +71,6 @@ export async function GET(
     acc[draft.threadId].push(draft);
     return acc;
   }, {} as Record<string, typeof drafts>);
-
 
   const threadData: ThreadWithResponses[] = threads
     .map((thread) => {
@@ -117,14 +109,10 @@ export async function GET(
       } as ThreadWithResponses;
     })
     .filter((t): t is NonNullable<typeof t> => !!t);
-  pushDebug("threadData");
-  endDebug();
-  console.log(Object.fromEntries(debug.map((d) => [d.name, d.time])));
 
   return NextResponse.json({
     userId: user.id,
     threads: threadData,
     hasMore,
-    debug: Object.fromEntries(debug.map((d) => [d.name, d.time])),
   });
 }

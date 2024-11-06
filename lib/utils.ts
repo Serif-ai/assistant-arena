@@ -48,7 +48,7 @@ export const startDebug = () => {
 
   const pushDebug = (name: string) => {
     const now = performance.now();
-    const time = (now - previous).toFixed(4);
+    const time = ((now - previous) / 1000).toFixed(4);
     debug.push({
       name,
       time,
@@ -59,7 +59,7 @@ export const startDebug = () => {
   const endDebug = () => {
     debug.push({
       name: "total",
-      time: (performance.now() - start).toFixed(4),
+      time: ((performance.now() - start) / 1000).toFixed(4),
     });
   };
 
