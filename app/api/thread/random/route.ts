@@ -10,33 +10,31 @@ export async function GET(
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
 
-  let testIp = null;
-  if (process.env.NODE_ENV === "development") {
-    testIp = await fetch("https://freeipapi.com/api/json/")
-      .then((res) => res.json())
-      .then((data) => data.ipAddress);
-  }
-  const ip = testIp || request.headers.get("x-forwarded-for") || "unknown";
-
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
   const user = await prisma.user.upsert({
     where: { ip },
     create: { ip },
     update: {},
+    select: { id: true },
   });
 
-  const votedThreadIds = await prisma.vote.findMany({
-    where: { userId: user.id },
-    select: { threadId: true },
-  });
-
-  let threads = await prisma.thread.findMany({
-    where: {
-      id: {
-        notIn: [...votedThreadIds.map((v) => v.threadId), ...excludeThreadIds],
+  const [votedThreadIds, initialThreads] = await Promise.all([
+    prisma.vote.findMany({
+      where: { userId: user.id },
+      select: { threadId: true },
+    }),
+    prisma.thread.findMany({
+      where: {
+        id: {
+          notIn: excludeThreadIds,
+        },
       },
-    },
-    take: BATCH_SIZE + 1,
-  });
+      take: BATCH_SIZE * 2,
+    }),
+  ]);
+
+  const votedIds = new Set(votedThreadIds.map((v) => v.threadId));
+  let threads = initialThreads.filter((t) => !votedIds.has(t.id));
 
   const hasMore = threads.length > BATCH_SIZE;
   threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
@@ -49,20 +47,17 @@ export async function GET(
     });
   }
 
-  const drafts = await prisma.aIResponse.findMany({
-    where: {
-      threadId: { in: threads.map((t) => t.id) },
-    },
-    include: {
-      model: true,
-    },
-  });
+  const threadIds = threads.map((t) => t.id);
 
-  const groundTruths = await prisma.groundTruth.findMany({
-    where: {
-      threadId: { in: threads.map((t) => t.id) },
-    },
-  });
+  const [drafts, groundTruths] = await Promise.all([
+    prisma.aIResponse.findMany({
+      where: { threadId: { in: threadIds } },
+      include: { model: true },
+    }),
+    prisma.groundTruth.findMany({
+      where: { threadId: { in: threadIds } },
+    }),
+  ]);
 
   const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
     acc[groundTruth.threadId] = groundTruth;
