@@ -18,7 +18,6 @@ export default function VotePage() {
   const [threads, setThreads] = useState<ThreadWithResponses[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startTime] = useState(Date.now());
-  const [voted, setVoted] = useState(false);
   const [userId, setUserId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
@@ -38,6 +37,7 @@ export default function VotePage() {
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
+      console.time("init");
       const data = await getThreads();
       if (data) {
         setThreads(data.threads);
@@ -45,6 +45,7 @@ export default function VotePage() {
         setUserId(data.userId);
       }
       setIsLoading(false);
+      console.timeEnd("init");
     };
     init();
   }, []);
@@ -79,7 +80,7 @@ export default function VotePage() {
         }
       }
 
-      setVoted(true);
+      setCurrentIndex((prev) => prev + 1);
       toast.success("Vote submitted successfully");
     } catch (error) {
       toast.error("Vote failed. Something went wrong");
@@ -87,11 +88,6 @@ export default function VotePage() {
     } finally {
       setIsVoting(false);
     }
-  };
-
-  const handleNext = () => {
-    setVoted(false);
-    setCurrentIndex((prev) => prev + 1);
   };
 
   if (isLoading) {
@@ -115,7 +111,7 @@ export default function VotePage() {
         <div className="border-b px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex justify-between items-center flex-wrap gap-2">
             <h2 className="font-semibold text-base sm:text-lg text-gray-800">
-              Thread {currentIndex + 1}
+              {currentThread.thread.emails[0].subject}
             </h2>
             {currentThread.thread.emails.length > MAX_VISIBLE_EMAILS && (
               <Button
@@ -206,7 +202,7 @@ export default function VotePage() {
       <div className="space-y-4 bg-white shadow-sm border rounded-lg overflow-hidden">
         <div className="border-b px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <h2 className="font-semibold text-base sm:text-lg text-gray-800">
-            Ground Truth
+            What was actually sent
           </h2>
           <Button
             variant="ghost"
@@ -250,7 +246,7 @@ export default function VotePage() {
                     : "hover:border-primary/50"
                 }
               `}
-            onClick={() => !voted && setSelectedResponse(side as "a" | "b")}
+            onClick={() => setSelectedResponse(side as "a" | "b")}
           >
             <div className="text-sm text-muted-foreground">
               Assistant {side.toUpperCase()}
@@ -267,25 +263,19 @@ export default function VotePage() {
       </div>
 
       <div className="flex justify-center gap-4">
-        {!voted ? (
-          <Button onClick={handleVote} disabled={!selectedResponse || isVoting}>
-            {isVoting ? (
-              <>
-                <span className="animate-spin mr-2">⏳</span>
-                Submitting...
-              </>
-            ) : (
-              <>
-                <ThumbsUp className="mr-2" />
-                Submit Vote
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button onClick={handleNext} variant="outline">
-            Next Thread
-          </Button>
-        )}
+        <Button onClick={handleVote} disabled={!selectedResponse || isVoting}>
+          {isVoting ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              Submitting...
+            </>
+          ) : (
+            <>
+              <ThumbsUp className="mr-2" />
+              Submit Vote
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
