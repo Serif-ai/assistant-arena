@@ -229,7 +229,7 @@ export default function VotePage() {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  No ground truth available for this thread.
+                  No sent email data available for this thread.
                 </p>
               )}
             </div>
