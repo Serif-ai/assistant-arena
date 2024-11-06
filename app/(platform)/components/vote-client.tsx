@@ -40,6 +40,8 @@ export default function VotePage() {
       console.time("init");
       const data = await getThreads();
       if (data) {
+        console.log(data.debug);
+        
         setThreads(data.threads);
         setHasMore(data.hasMore);
         setUserId(data.userId);

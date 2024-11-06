@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import { BATCH_SIZE } from "@/const";
 import { ThreadWithResponses, TypedEmail } from "@/types";
 import { GetThreadsResponse } from "@/types/thread";
-import { time, timeEnd } from "console";
 
 export async function GET(
   request: NextRequest
@@ -11,30 +10,33 @@ export async function GET(
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
 
-  time("total");
-  time("1");
+  const debug: Record<string, number> = {};
+  const startTotal = performance.now();
+  const start1 = performance.now();
+  
   let testIp = null;
   if (process.env.NODE_ENV === "development") {
     testIp = await fetch("https://freeipapi.com/api/json/")
       .then((res) => res.json())
       .then((data) => data.ipAddress);
   }
-  timeEnd("1");
+  debug["1"] = performance.now() - start1;
+
   const ip = testIp || request.headers.get("x-forwarded-for") || "unknown";
-  time("2");
+  const start2 = performance.now();
   const user = await prisma.user.upsert({
     where: { ip },
     create: { ip },
     update: {},
   });
-  timeEnd("2");
-  time("3");
+  debug["2"] = performance.now() - start2;
+
   const votedThreadIds = await prisma.vote.findMany({
     where: { userId: user.id },
     select: { threadId: true },
   });
-  timeEnd("3");
-  time("4");
+  debug["3"] = performance.now() - start2;
+
   let threads = await prisma.thread.findMany({
     where: {
       id: {
@@ -43,8 +45,8 @@ export async function GET(
     },
     take: BATCH_SIZE + 1,
   });
-  timeEnd("4");
-  time("5");
+  debug["4"] = performance.now() - start2;
+
   const hasMore = threads.length > BATCH_SIZE;
   threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
 
@@ -64,15 +66,15 @@ export async function GET(
       model: true,
     },
   });
-  timeEnd("5");
-  time("6");
+  debug["5"] = performance.now() - start2;
+
   const groundTruths = await prisma.groundTruth.findMany({
     where: {
       threadId: { in: threads.map((t) => t.id) },
     },
   });
-  timeEnd("6");
-  time("7");
+  debug["6"] = performance.now() - start2;
+
   const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
     acc[groundTruth.threadId] = groundTruth;
     return acc;
@@ -123,12 +125,13 @@ export async function GET(
       } as ThreadWithResponses;
     })
     .filter((t): t is NonNullable<typeof t> => !!t);
-  timeEnd("7");
-  timeEnd("total");
+  debug["7"] = performance.now() - start2;
+
+  debug["total"] = performance.now() - startTotal;
   return NextResponse.json({
     userId: user.id,
     threads: threadData,
     hasMore,
-    debug: {},
+    debug,
   });
 }
