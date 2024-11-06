@@ -18,25 +18,29 @@ export async function GET(
     where: { ip },
     create: { ip },
     update: {},
+    select: { id: true },
   });
 
   pushDebug("user");
 
-  const votedThreadIds = await prisma.vote.findMany({
-    where: { userId: user.id },
-    select: { threadId: true },
-  });
-  pushDebug("votes");
-
-  let threads = await prisma.thread.findMany({
-    where: {
-      id: {
-        notIn: [...votedThreadIds.map((v) => v.threadId), ...excludeThreadIds],
+  const [votedThreadIds, initialThreads] = await Promise.all([
+    prisma.vote.findMany({
+      where: { userId: user.id },
+      select: { threadId: true },
+    }),
+    prisma.thread.findMany({
+      where: {
+        id: {
+          notIn: excludeThreadIds,
+        },
       },
-    },
-    take: BATCH_SIZE + 1,
-  });
-  pushDebug("threads");
+      take: BATCH_SIZE * 2,
+    }),
+  ]);
+  pushDebug("parallel_queries");
+
+  const votedIds = new Set(votedThreadIds.map(v => v.threadId));
+  let threads = initialThreads.filter(t => !votedIds.has(t.id));
 
   const hasMore = threads.length > BATCH_SIZE;
   threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
@@ -49,22 +53,18 @@ export async function GET(
     });
   }
 
-  const drafts = await prisma.aIResponse.findMany({
-    where: {
-      threadId: { in: threads.map((t) => t.id) },
-    },
-    include: {
-      model: true,
-    },
-  });
-  pushDebug("drafts");
+  const threadIds = threads.map(t => t.id);
 
-  const groundTruths = await prisma.groundTruth.findMany({
-    where: {
-      threadId: { in: threads.map((t) => t.id) },
-    },
-  });
-  pushDebug("groundTruths");
+  const [drafts, groundTruths] = await Promise.all([
+    prisma.aIResponse.findMany({
+      where: { threadId: { in: threadIds } },
+      include: { model: true },
+    }),
+    prisma.groundTruth.findMany({
+      where: { threadId: { in: threadIds } },
+    }),
+  ]);
+  pushDebug("parallel_content_queries");
 
   const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
     acc[groundTruth.threadId] = groundTruth;
@@ -78,6 +78,7 @@ export async function GET(
     acc[draft.threadId].push(draft);
     return acc;
   }, {} as Record<string, typeof drafts>);
+
 
   const threadData: ThreadWithResponses[] = threads
     .map((thread) => {
