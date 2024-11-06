@@ -40,3 +40,32 @@ export const callApi = async <T = undefined>(
     };
   }
 };
+
+export const startDebug = () => {
+  const debug: { name: string; time: string }[] = [];
+  const start = performance.now();
+  let previous = start;
+
+  const pushDebug = (name: string) => {
+    const now = performance.now();
+    const time = (now - previous).toFixed(4);
+    debug.push({
+      name,
+      time,
+    });
+    previous = now;
+  };
+
+  const endDebug = () => {
+    debug.push({
+      name: "total",
+      time: (performance.now() - start).toFixed(4),
+    });
+  };
+
+  return {
+    debug,
+    pushDebug,
+    endDebug,
+  };
+};
