@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { BATCH_SIZE } from "@/const";
 import { ThreadWithResponses, TypedEmail } from "@/types";
 import { GetThreadsResponse } from "@/types/thread";
+import { time, timeEnd } from "console";
 
 export async function GET(
   request: NextRequest
@@ -10,25 +11,30 @@ export async function GET(
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
 
+  time("total");
+  time("1");
   let testIp = null;
   if (process.env.NODE_ENV === "development") {
     testIp = await fetch("https://freeipapi.com/api/json/")
       .then((res) => res.json())
       .then((data) => data.ipAddress);
   }
+  timeEnd("1");
   const ip = testIp || request.headers.get("x-forwarded-for") || "unknown";
-
+  time("2");
   const user = await prisma.user.upsert({
     where: { ip },
     create: { ip },
     update: {},
   });
-
+  timeEnd("2");
+  time("3");
   const votedThreadIds = await prisma.vote.findMany({
     where: { userId: user.id },
     select: { threadId: true },
   });
-
+  timeEnd("3");
+  time("4");
   let threads = await prisma.thread.findMany({
     where: {
       id: {
@@ -37,7 +43,8 @@ export async function GET(
     },
     take: BATCH_SIZE + 1,
   });
-
+  timeEnd("4");
+  time("5");
   const hasMore = threads.length > BATCH_SIZE;
   threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
 
@@ -57,13 +64,15 @@ export async function GET(
       model: true,
     },
   });
-
+  timeEnd("5");
+  time("6");
   const groundTruths = await prisma.groundTruth.findMany({
     where: {
       threadId: { in: threads.map((t) => t.id) },
     },
   });
-
+  timeEnd("6");
+  time("7");
   const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
     acc[groundTruth.threadId] = groundTruth;
     return acc;
@@ -114,10 +123,12 @@ export async function GET(
       } as ThreadWithResponses;
     })
     .filter((t): t is NonNullable<typeof t> => !!t);
-
+  timeEnd("7");
+  timeEnd("total");
   return NextResponse.json({
     userId: user.id,
     threads: threadData,
     hasMore,
+    debug: {},
   });
 }
