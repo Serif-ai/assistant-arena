@@ -41,6 +41,7 @@ export type TypedEmail = {
   from: string;
   to: string;
   cc: string;
+  bcc: string;
   date: string;
   text: string;
 };

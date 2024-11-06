@@ -19,7 +19,7 @@ export default function VotePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startTime] = useState(Date.now());
   const [userId, setUserId] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isVoting, setIsVoting] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(
     null
@@ -171,6 +171,11 @@ export default function VotePage() {
                             <span className="font-medium">Cc:</span> {msg.cc}
                           </div>
                         )}
+                        {msg.bcc && (
+                          <div className="text-sm text-gray-600">
+                            <span className="font-medium">Bcc:</span> {msg.bcc}
+                          </div>
+                        )}
                         <div className="text-sm font-medium text-gray-800">
                           Subject: {msg.subject}
                         </div>
@@ -244,7 +249,7 @@ export default function VotePage() {
             className={`space-y-4 border p-3 sm:p-6 rounded-lg flex flex-col cursor-pointer transition-colors
                 ${
                   selectedResponse === side
-                    ? "border-primary border-2"
+                    ? "border-primary outline"
                     : "hover:border-primary/50"
                 }
               `}
@@ -254,6 +259,28 @@ export default function VotePage() {
               Assistant {side.toUpperCase()}
             </div>
             <div className="flex-1 flex flex-col gap-4">
+              <div className="space-y-2 text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Subject:</span>{" "}
+                  {currentThread.responses[side as "a" | "b"].draft.subject || ""}
+                </div>
+                <div>
+                  <span className="font-medium">To:</span>{" "}
+                  {currentThread.responses[side as "a" | "b"].draft.to || ""}
+                </div>
+                {currentThread.responses[side as "a" | "b"].draft.cc && (
+                  <div>
+                    <span className="font-medium">Cc:</span>{" "}
+                    {currentThread.responses[side as "a" | "b"].draft.cc}
+                  </div>
+                )}
+                {currentThread.responses[side as "a" | "b"].draft.bcc && (
+                  <div>
+                    <span className="font-medium">Bcc:</span>{" "}
+                    {currentThread.responses[side as "a" | "b"].draft.bcc}
+                  </div>
+                )}
+              </div>
               <div className="bg-card p-3 sm:p-6 rounded-lg min-h-[150px] sm:min-h-[200px] flex-1">
                 <p className="whitespace-pre-wrap text-sm sm:text-base">
                   {currentThread.responses[side as "a" | "b"].draft.text}
