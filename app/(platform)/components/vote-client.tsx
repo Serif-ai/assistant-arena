@@ -8,23 +8,30 @@ import { ThreadWithResponses } from "@/types";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { getThreads } from "@/lib/fetchers/thread";
+import { GetThreadsResponse } from "@/types/thread";
 
 const formatDate = (dateString: string) => {
   const date = parseISO(dateString);
   return format(date, "MMM d, yyyy 'at' h:mm a");
 };
 
-export default function VotePage() {
-  const [threads, setThreads] = useState<ThreadWithResponses[]>([]);
+export default function VotePage({
+  initialData,
+}: {
+  initialData: GetThreadsResponse | null;
+}) {
+  const [threads, setThreads] = useState<ThreadWithResponses[]>(
+    initialData?.threads || []
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startTime] = useState(Date.now());
-  const [userId, setUserId] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState(initialData?.userId || "");
+  const [isLoading, setIsLoading] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(
     null
   );
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(initialData?.hasMore || false);
   const [showGroundTruth, setShowGroundTruth] = useState(false);
   const [expandedEmails, setExpandedEmails] = useState(false);
   const MAX_VISIBLE_EMAILS = 2;
@@ -35,6 +42,7 @@ export default function VotePage() {
   );
 
   useEffect(() => {
+    console.log("initialData", initialData);
     const init = async () => {
       setIsLoading(true);
       console.time("init");
@@ -49,8 +57,11 @@ export default function VotePage() {
       setIsLoading(false);
       console.timeEnd("init");
     };
-    init();
-  }, []);
+
+    if (!initialData) {
+      init();
+    }
+  }, [initialData]);
 
   const handleVote = async () => {
     if (!userId || !threads[currentIndex] || !selectedResponse) return;

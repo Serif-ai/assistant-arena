@@ -9,31 +9,37 @@ export async function GET(
 ): Promise<NextResponse<GetThreadsResponse>> {
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
-
   const ip = request.headers.get("x-forwarded-for") || "unknown";
-  const user = await prisma.user.upsert({
-    where: { ip },
-    create: { ip },
-    update: {},
-    select: { id: true },
-  });
+  console.time("total");
+  console.time("threads");
 
-  const [votedThreadIds, initialThreads] = await Promise.all([
-    prisma.vote.findMany({
-      where: { userId: user.id },
-      select: { threadId: true },
+  const [userWithVotes, initialThreads] = await Promise.all([
+    prisma.user.upsert({
+      where: { ip },
+      create: { ip },
+      update: {},
+      select: {
+        id: true,
+        votes: {
+          select: { threadId: true },
+        },
+      },
     }),
     prisma.thread.findMany({
       where: {
-        id: {
-          notIn: excludeThreadIds,
-        },
+        id: { notIn: excludeThreadIds },
       },
-      take: BATCH_SIZE * 2,
+      include: {
+        drafts: {
+          include: { model: true },
+        },
+        groundTruth: true,
+      },
     }),
   ]);
-
-  const votedIds = new Set(votedThreadIds.map((v) => v.threadId));
+  console.timeEnd("threads");
+  const user = userWithVotes;
+  const votedIds = new Set(user.votes.map((v) => v.threadId));
   let threads = initialThreads.filter((t) => !votedIds.has(t.id));
 
   const hasMore = threads.length > BATCH_SIZE;
@@ -47,42 +53,13 @@ export async function GET(
     });
   }
 
-  const threadIds = threads.map((t) => t.id);
-
-  const [drafts, groundTruths] = await Promise.all([
-    prisma.aIResponse.findMany({
-      where: { threadId: { in: threadIds } },
-      include: { model: true },
-    }),
-    prisma.groundTruth.findMany({
-      where: { threadId: { in: threadIds } },
-    }),
-  ]);
-
-  const groundTruthByThread = groundTruths.reduce((acc, groundTruth) => {
-    acc[groundTruth.threadId] = groundTruth;
-    return acc;
-  }, {} as Record<string, (typeof groundTruths)[0]>);
-
-  const responsesByThread = drafts.reduce((acc, draft) => {
-    if (!acc[draft.threadId]) {
-      acc[draft.threadId] = [];
-    }
-    acc[draft.threadId].push(draft);
-    return acc;
-  }, {} as Record<string, typeof drafts>);
-
   const threadData: ThreadWithResponses[] = threads
     .map((thread) => {
-      const threadResponses = responsesByThread[thread.id] || [];
-      const groundTruth = groundTruthByThread[thread.id];
+      if (!thread.drafts || thread.drafts.length < 2) return null;
 
-      if (threadResponses.length < 2) {
-        return null;
-      }
-
-      const shuffledResponses = threadResponses.sort(() => Math.random() - 0.5);
-      const [responseA, responseB] = shuffledResponses.slice(0, 2);
+      const [responseA, responseB] = thread.drafts
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 2);
 
       return {
         thread: {
@@ -101,14 +78,15 @@ export async function GET(
             model: responseB.model,
           },
         },
-        groundTruth: groundTruth
+        groundTruth: thread.groundTruth[0]
           ? {
-              email: groundTruth.email as TypedEmail,
+              email: thread.groundTruth[0].email as TypedEmail,
             }
           : undefined,
       } as ThreadWithResponses;
     })
     .filter((t): t is NonNullable<typeof t> => !!t);
+  console.timeEnd("total");
 
   return NextResponse.json({
     userId: user.id,
