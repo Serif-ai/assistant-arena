@@ -31,7 +31,6 @@ export default function VotePage({
   const [selectedResponse, setSelectedResponse] = useState<"a" | "b" | null>(
     null
   );
-  const [hasMore, setHasMore] = useState(initialData?.hasMore || false);
   const [showGroundTruth, setShowGroundTruth] = useState(false);
   const [expandedEmails, setExpandedEmails] = useState(false);
   const MAX_VISIBLE_EMAILS = 2;
@@ -51,7 +50,6 @@ export default function VotePage({
         console.log("data", data);
 
         setThreads(data.threads);
-        setHasMore(data.hasMore);
         setUserId(data.userId);
       }
       setIsLoading(false);
@@ -81,17 +79,6 @@ export default function VotePage({
         loserId,
         timeToVote,
       });
-
-      if (currentIndex >= threads.length - 2 && hasMore) {
-        const data = await getThreads(threads.map((t) => t.thread.id));
-        if (data) {
-          setThreads((prev) => [
-            ...prev,
-            ...data.threads.filter((t) => !prev.includes(t)),
-          ]);
-          setHasMore(data.hasMore);
-        }
-      }
 
       setCurrentIndex((prev) => prev + 1);
       toast.success("Vote submitted successfully");
@@ -291,7 +278,8 @@ export default function VotePage({
               <div className="space-y-2 text-sm text-gray-600">
                 <div>
                   <span className="font-medium">Subject:</span>{" "}
-                  {currentThread.responses[side as "a" | "b"].draft.subject || ""}
+                  {currentThread.responses[side as "a" | "b"].draft.subject ||
+                    ""}
                 </div>
                 <div>
                   <span className="font-medium">To:</span>{" "}

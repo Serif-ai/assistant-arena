@@ -14,6 +14,5 @@ export type EmailThreadCreateBody = Omit<
 export type GetThreadsResponse = {
   userId: string;
   threads: ThreadWithResponses[];
-  hasMore: boolean;
   debug?: object;
 };

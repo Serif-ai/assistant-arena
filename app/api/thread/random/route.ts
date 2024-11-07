@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { BATCH_SIZE } from "@/const";
 import { ThreadWithResponses, TypedEmail } from "@/types";
 import { GetThreadsResponse } from "@/types/thread";
 
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
-  const exclude = request.nextUrl.searchParams.get("exclude");
-  const excludeThreadIds = exclude ? exclude.split(",") : [];
-  const ip = request.nextUrl.searchParams.get("clientIp") || "unknown";
-  console.time("total");
-  console.time("threads");
+  const ip = request.headers.get("x-client-ip") || "unknown";
 
   const [userWithVotes, initialThreads] = await Promise.all([
     prisma.user.upsert({
@@ -26,9 +21,6 @@ export async function GET(
       },
     }),
     prisma.thread.findMany({
-      where: {
-        id: { notIn: excludeThreadIds },
-      },
       include: {
         drafts: {
           include: { model: true },
@@ -37,19 +29,16 @@ export async function GET(
       },
     }),
   ]);
-  console.timeEnd("threads");
   const user = userWithVotes;
   const votedIds = new Set(user.votes.map((v) => v.threadId));
   let threads = initialThreads.filter((t) => !votedIds.has(t.id));
 
-  const hasMore = threads.length > BATCH_SIZE;
-  threads = threads.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
+  threads = threads.sort(() => Math.random() - 0.5);
 
   if (!threads.length) {
     return NextResponse.json({
       userId: user.id,
       threads: [],
-      hasMore: false,
     });
   }
 
@@ -91,6 +80,8 @@ export async function GET(
   return NextResponse.json({
     userId: user.id,
     threads: threadData,
-    hasMore,
+    debug: {
+      ip,
+    },
   });
 }

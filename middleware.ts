@@ -1,10 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
-  const nextUrl = req.nextUrl;
 
-  nextUrl.searchParams.set("clientIp", ip);
+  const response = NextResponse.next({
+    request: {
+      headers: new Headers({
+        "x-client-ip": ip,
+      }),
+    },
+  });
 
-  return NextResponse.rewrite(nextUrl);
+  return response;
 }
+
+export const config = {
+  matcher: "/api/:path*",
+};
