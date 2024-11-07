@@ -239,6 +239,24 @@ export default function VotePage({
                   <div className="text-sm text-muted-foreground">
                     Original Response
                   </div>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">To:</span>{" "}
+                      {currentThread.groundTruth.email.to}
+                    </div>
+                    {currentThread.groundTruth.email.cc && (
+                      <div>
+                        <span className="font-medium">Cc:</span>{" "}
+                        {currentThread.groundTruth.email.cc}
+                      </div>
+                    )}
+                    {currentThread.groundTruth.email.bcc && (
+                      <div>
+                        <span className="font-medium">Bcc:</span>{" "}
+                        {currentThread.groundTruth.email.bcc}
+                      </div>
+                    )}
+                  </div>
                   <p className="whitespace-pre-wrap text-gray-700">
                     {currentThread.groundTruth.email.text}
                   </p>
