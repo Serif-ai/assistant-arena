@@ -18,6 +18,7 @@ export default async function Home() {
 
   return (
     <div className="container mx-auto py-8">
+      {ip}
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="vote">Vote</TabsTrigger>
