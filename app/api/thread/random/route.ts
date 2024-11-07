@@ -6,10 +6,10 @@ import { GetThreadsResponse } from "@/types/thread";
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
-  const params = request.nextUrl.searchParams.toString();
   // const ip = request.nextUrl.searchParams.get("ip") || "unknown";
   const ip = request.nextUrl.searchParams.get("ip") || "unknown";
 
+  const debugString = request.nextUrl.searchParams.toString();
   console.log("ip", ip);
   // if (!ip) {
   //   ip = request.headers.get("x-forwarded-for") || "unknown";
@@ -48,6 +48,10 @@ export async function GET(
     return NextResponse.json({
       userId: user.id,
       threads: [],
+      debug: {
+        debugString,
+        ip,
+      },
     });
   }
 
@@ -91,7 +95,7 @@ export async function GET(
     threads: threadData,
     debug: {
       ip,
-      params,
+      debugString,
     },
   });
 }
