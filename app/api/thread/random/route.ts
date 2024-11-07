@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { ThreadWithResponses, TypedEmail } from "@/types";
 import { GetThreadsResponse } from "@/types/thread";
+import { ipAddress } from "@vercel/functions";
 
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
-  const ip = request.nextUrl.searchParams.get("ip") || "unknown";
-  console.log('ip',ip);
-  
+  // const ip = request.nextUrl.searchParams.get("ip") || "unknown";
+  const ip =
+    ipAddress(request) || request.nextUrl.searchParams.get("ip") || "unknown";
+
+  console.log("ip", ip);
   // if (!ip) {
   //   ip = request.headers.get("x-forwarded-for") || "unknown";
   // }
@@ -89,6 +92,8 @@ export async function GET(
     threads: threadData,
     debug: {
       ip,
+      search: request.nextUrl.searchParams.get("ip"),
+      address: ipAddress(request),
     },
   });
 }
