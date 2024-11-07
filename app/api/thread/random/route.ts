@@ -6,12 +6,14 @@ import { GetThreadsResponse } from "@/types/thread";
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetThreadsResponse>> {
-  // let ip = request.nextUrl.searchParams.get("ip");
+  const ip = request.nextUrl.searchParams.get("ip") || "unknown";
+  console.log('ip',ip);
+  
   // if (!ip) {
   //   ip = request.headers.get("x-forwarded-for") || "unknown";
   // }
 
-  const ip = request.headers.get("x-client-ip") || "unknown";
+  // const ip = request.headers.get("x-client-ip") || "unknown";
 
   const [userWithVotes, initialThreads] = await Promise.all([
     prisma.user.upsert({
