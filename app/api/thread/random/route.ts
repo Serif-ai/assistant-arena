@@ -9,7 +9,7 @@ export async function GET(
 ): Promise<NextResponse<GetThreadsResponse>> {
   const exclude = request.nextUrl.searchParams.get("exclude");
   const excludeThreadIds = exclude ? exclude.split(",") : [];
-  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  const ip = request.nextUrl.searchParams.get("clientIp") || "unknown";
   console.time("total");
   console.time("threads");
 
