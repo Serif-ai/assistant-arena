@@ -11,6 +11,7 @@ export const getThreads = async (excludeThreadIds: string[] = []) => {
       next: {
         tags: ["get-threads"],
       },
+      cache: "no-store",
     }
   );
 
