@@ -11,6 +11,8 @@ export async function GET(
     ip = request.headers.get("x-forwarded-for") || "unknown";
   }
 
+  const debugString = request.nextUrl.searchParams.toString();
+
   const [userWithVotes, initialThreads] = await Promise.all([
     prisma.user.upsert({
       where: { ip },
@@ -42,6 +44,10 @@ export async function GET(
     return NextResponse.json({
       userId: user.id,
       threads: [],
+      debug: {
+        ip,
+        debugString,
+      },
     });
   }
 
@@ -85,6 +91,7 @@ export async function GET(
     threads: threadData,
     debug: {
       ip,
+      debugString,
     },
   });
 }

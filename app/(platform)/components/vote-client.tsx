@@ -17,8 +17,10 @@ const formatDate = (dateString: string) => {
 
 export default function VotePage({
   initialData,
+  ip,
 }: {
   initialData: GetThreadsResponse | null;
+  ip: string;
 }) {
   const [threads, setThreads] = useState<ThreadWithResponses[]>(
     initialData?.threads || []
@@ -45,7 +47,7 @@ export default function VotePage({
     const init = async () => {
       setIsLoading(true);
       console.time("init");
-      const data = await getThreads();
+      const data = await getThreads(ip);
       if (data) {
         console.log("data", data);
 

@@ -2,12 +2,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VoteClient from "./components/vote-client";
 import LeaderboardClient from "./components/leaderboard-client";
 // import { getThreads } from "@/lib/fetchers/thread";
-// import { headers } from "next/headers";
+import { headers } from "next/headers";
 
 export default async function Home() {
-  // const headersList = await headers();
-  // const ip =
-  //   headersList.get("x-forwarded-for") || headersList.get("remote-addr");
+  const headersList = await headers();
+  const ip =
+    headersList.get("x-forwarded-for") || headersList.get("remote-addr") || "";
 
   const defaultTab = "vote";
   const initialData = null;
@@ -21,7 +21,7 @@ export default async function Home() {
         </TabsList>
 
         <TabsContent value="vote">
-          <VoteClient initialData={initialData} />
+          <VoteClient initialData={initialData} ip={ip} />
         </TabsContent>
 
         <TabsContent value="leaderboard">
