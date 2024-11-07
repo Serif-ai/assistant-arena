@@ -1,20 +1,16 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VoteClient from "./components/vote-client";
 import LeaderboardClient from "./components/leaderboard-client";
-import { getThreads } from "@/lib/fetchers/thread";
-import { headers } from "next/headers";
+// import { getThreads } from "@/lib/fetchers/thread";
+// import { headers } from "next/headers";
 
 export default async function Home() {
-  const headersList = await headers();
-  const ip =
-    headersList.get("x-forwarded-for") || headersList.get("remote-addr");
-  console.log(ip);
+  // const headersList = await headers();
+  // const ip =
+  //   headersList.get("x-forwarded-for") || headersList.get("remote-addr");
 
   const defaultTab = "vote";
-  console.time("initialData");
-  const initialData = ip ? await getThreads(ip) : null;
-  console.timeEnd("initialData");
-  console.log(initialData);
+  const initialData = null;
 
   return (
     <div className="container mx-auto py-8">
